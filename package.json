@@ -1,0 +1,33 @@
+{
+  "name": "layered-material",
+  "version": "0.0.1",
+  "description": "A threejs material to manage texture layers.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "rollup -c",
+    "test": "npm run test",
+    "start": "serve"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pvogel2/LayeredMaterial.git"
+  },
+  "keywords": [
+    "threejs",
+    "material",
+    "layer"
+  ],
+  "author": "Peter Vogel",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/pvogel2/LayeredMaterial/issues"
+  },
+  "homepage": "https://github.com/pvogel2/LayeredMaterial#readme",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^20.0.0",
+    "@rollup/plugin-node-resolve": "^13.0.4",
+    "rollup": "^2.56.2",
+    "serve": "^12.0.0",
+    "three": "^0.131.3"
+  }
+}

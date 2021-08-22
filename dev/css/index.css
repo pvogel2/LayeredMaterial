@@ -1,0 +1,21 @@
+html {
+  height: 100%;
+  margin:0px;
+  padding:0px;
+}
+
+body {
+  min-height: 100%;
+  margin:0px;
+  padding:0px;
+  overflow: hidden;
+  position:relative;
+}
+
+body > canvas {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top:0;
+  bottom:0;
+}
