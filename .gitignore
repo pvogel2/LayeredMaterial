@@ -1,4 +1,5 @@
 .project
 .settings
 dist/
+build/
 node_modules

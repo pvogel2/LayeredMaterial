@@ -1,5 +1,6 @@
 import nodeResolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
+import babel from '@rollup/plugin-babel';
 
 export default [
   {
@@ -24,6 +25,25 @@ export default [
       file: 'dist/MaterialLayer.js',
       format: 'iife',
       name: 'MaterialLayer',
+    }
+  },
+  {
+    external: ['react', 'react-dom'],
+    input: 'src/dev/index.js',
+    plugins: [
+      nodeResolve(), // so Rollup can find `ms`
+      babel({
+        presets: ["@babel/preset-react"],
+      }),
+      commonjs() // so Rollup can convert `ms` to an ES module
+    ],
+    output: {
+      file: 'build/index.js',
+      format: 'iife',
+      globals: {
+        react: 'React',
+        'react-dom': 'ReactDOM',
+      },
     }
   },
 ];
