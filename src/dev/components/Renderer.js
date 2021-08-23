@@ -1,14 +1,14 @@
 import React, { useEffect } from 'react';
 
 function Renderer() {
-    const GRASS01_JPG = '/dev/images/grass01.jpg';
-    const GRASS02_JPG = '/dev/images/grass02.jpg';
-    const GRASS1BUMP_PNG = '/dev/images/grass01_bump256.png';
-    const GRASS2BUMP_PNG = '/dev/images/grass02_bump256.png';
-    const ROCK2BUMP_PNG = '/dev/images/rock02_bump256.png';
+    const GRASS01_JPG = '/images/grass01.jpg';
+    const GRASS02_JPG = '/images/grass02.jpg';
+    const GRASS1BUMP_PNG = '/images/grass01_bump256.png';
+    const GRASS2BUMP_PNG = '/images/grass02_bump256.png';
+    const ROCK2BUMP_PNG = '/images/rock02_bump256.png';
     
-    const ROCK01_JPG = '/dev/images/rock01.jpg';
-    const ROCK02_JPG = '/dev/images/rock02.jpg';
+    const ROCK01_JPG = '/images/rock01.jpg';
+    const ROCK02_JPG = '/images/rock02.jpg';
     
     function createGeometry() {
         const size = 10;
@@ -63,7 +63,7 @@ function Renderer() {
           bumpScale: 0.08,
         }),
       ];
-    
+
       return new MeshLayeredMaterial({ layers, side: THREE.DoubleSide, wireframe: false, bumpScale: 1 });
     }
     
@@ -108,7 +108,7 @@ function Renderer() {
            }
           
         window.addEventListener( 'resize', onWindowResize, false );
-          
+  
         createTestMesh(scene);
 
         camera.position.z = 5;
