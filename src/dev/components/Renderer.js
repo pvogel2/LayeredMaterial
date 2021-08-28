@@ -57,7 +57,7 @@ function Renderer() {
         }),
         new MaterialLayer({
           id: 'rock',
-          range:[0, 2.0],
+          range:[0, 4.0],
           rangeTrns: [0.5, 0.5],
           slope:[0, 1],
           map: [ROCK01_JPG, ROCK02_JPG],

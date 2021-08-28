@@ -7,6 +7,8 @@ import CardHeader from '@material-ui/core/CardHeader';
 import Avatar from '@material-ui/core/Avatar';
 import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
+import Switch from '@material-ui/core/Switch';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
 
 import Layer from './layer.js';
 
@@ -34,9 +36,11 @@ const useStyles = makeStyles((theme) => ({
 let toggleDialog = false;
 
 function Dialog(props) {
-  const { layer, material, dispatch } = props;
+  const { randomize, layer, material, dispatch } = props;
 
   const [dialogOpen, setDialogOpen] = useState(true);
+
+  const [randomizeChecked, setRandomizeChecked] = useState(randomize);
 
   function handleKeyDown(e) {
     if (e.key !== 'm') return;
@@ -47,6 +51,12 @@ function Dialog(props) {
 
   function onLayerChange(layer) {
     dispatch({ type: 'UPDATE_LAYER', payload: layer });
+  }
+
+  function onRandomizeChange(event) {
+    const checked = event.target.checked;
+    dispatch({ type: 'RANDOMIZE', payload: checked });
+    setRandomizeChecked(checked);
   }
 
   function onClose() {
@@ -93,6 +103,10 @@ function Dialog(props) {
         subheader="Changes applied on the fly"
       />
       <CardContent className={classes.root}>
+        <FormControlLabel
+          control={<Switch checked={randomizeChecked} onChange={onRandomizeChange} name="randomization" />}
+          label="Tile Randomization"
+        />
         {mLayers}
       </CardContent>
     </Card>
@@ -103,6 +117,7 @@ function mapStateToProps(state) {
   return {
     material: state.material,
     layer: state.layer,
+    randomize: state.randomize,
   };
 };
 

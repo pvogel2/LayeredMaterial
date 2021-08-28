@@ -124,28 +124,20 @@ export const ROTATE_QAUDRANTS = `
  * define all needed global fragment variables here (in header)
  */
 export const UV_MIX_PARS_FRAGMENT =  `
+${FBM}
+
+${NOISE}
+
+float vUvNoise;
+float vUvMixAmount;
+
 #ifdef USE_UV_MIX
-  ${FBM}
-
-  ${NOISE}
-
   ${ROTATE_QAUDRANTS}
 
   vec2 vUvCorn;
   vec2 vUvCent;
   vec2 vUvCentDist;
-  float vUvNoise;
   float vUvMixThreshold;
-  float vUvMixAmount;
-
-  vec2 getMixedVectorValues(vec2 a, vec2 b) {
-    return mix(a, b, vUvMixAmount);
-  }
-
-  vec3 getMixedVectorValues(vec3 a, vec3 b) {
-    return mix(a, b, vUvMixAmount);
-  }
-
 #endif
 `;
 
@@ -153,11 +145,12 @@ export const UV_MIX_PARS_FRAGMENT =  `
  *prefix in main function
  */
  export const UV_MIX_FRAGMENT_BEGIN = `
-#ifdef USE_UV_MIX
+ vUvNoise = noise(vUv);
+ vUvMixAmount = smoothstep(0., .6, vUvNoise * fbm(vUv * 3.)) + 0.2 * smoothstep(0., 1., vUvNoise * fbm(vUv * 40.));
+
+ #ifdef USE_UV_MIX
   vec2 fl = floor(vUv);
   vec2 fr = fract(vUv);
-  vUvNoise = noise(vUv);
-  vUvMixAmount = smoothstep(0., .6, vUvNoise * fbm(vUv * 3.)) + 0.2 * smoothstep(0., 1., vUvNoise * fbm(vUv * 40.));
 
   vUvCorn = rotateQuadrants(fr, fl);
   vUvCent = rotateAroundCenter(fr, random(fl), vec2(0., 0.));
@@ -168,12 +161,10 @@ export const UV_MIX_PARS_FRAGMENT =  `
 `;
 
 export const BUMPMAP_PARS_FRAGMENT = `
+#include <bumpmap_pars_fragment>
+
 #ifdef USE_BUMPMAP
   #ifdef USE_UV_MIX
-    uniform sampler2D bumpMap;
-  	uniform sampler2D bumpMap2;
-  	uniform float bumpScale;
-  
     vec2 dHdxy_per_texture_fwd(sampler2D tex, float scale) {
       vec2 dSTdxCent = dFdx( vUvCent );
   		vec2 dSTdyCent = dFdy( vUvCent );
@@ -185,75 +176,67 @@ export const BUMPMAP_PARS_FRAGMENT = `
   		float dBy = scale * mix(texture2D(tex , vUvCent + dSTdyCent), texture2D(tex , vUvCorn + dSTdyCorn), vUvMixThreshold).x - Hll;
   		return vec2( dBx, dBy );
     }
-  
-  	vec2 dHdxy_fwd(sampler2D tex1) {
-  		return dHdxy_per_texture_fwd(tex1, bumpScale);
-  	}
 
-    vec2 dHdxy_fwd(sampler2D tex1, float scale) {
-  		return dHdxy_per_texture_fwd(tex1, scale);
-  	}
+    vec4 randomizeTileTextures(sampler2D tex1, sampler2D tex2) {
+      vec3 color1 = mix(texture2D(tex1 , vUvCent).rgb, texture2D(tex1 , vUvCorn).rgb, vUvMixThreshold);
+      vec3 color2 = mix(texture2D(tex2 , vUvCent).rgb, texture2D(tex2 , vUvCorn).rgb, vUvMixThreshold);
 
-    vec2 dHdxy_fwd(sampler2D tex1, sampler2D tex2) {
-  		vec2 dHdx01 = dHdxy_per_texture_fwd(tex1, bumpScale);
-  		vec2 dHdx02 = dHdxy_per_texture_fwd(tex2, bumpScale);
-      return getMixedVectorValues(dHdx01, dHdx02);
-  	}
+      return vec4(mix(color1, color2, vUvMixAmount), 1.);
+    }
 
-    vec2 dHdxy_fwd(sampler2D tex1, sampler2D tex2, float scale) {
-  		vec2 dHdx01 = dHdxy_per_texture_fwd(tex1, scale);
-  		vec2 dHdx02 = dHdxy_per_texture_fwd(tex2, scale);
-      return getMixedVectorValues(dHdx01, dHdx02);
-  	}
+    vec4 randomizeTileTexture(sampler2D tex) {
+      vec3 color = mix(texture2D(tex , vUvCent).rgb, texture2D(tex , vUvCorn).rgb, vUvMixThreshold);
 
-    vec3 perturbNormalArb( vec3 surf_pos, vec3 surf_norm, vec2 dHdxy, float faceDirection ) {
-  		// Workaround for Adreno 3XX dFd*( vec3 ) bug. See #9988
-
-      vec3 vSigmaX = vec3( dFdx( surf_pos.x ), dFdx( surf_pos.y ), dFdx( surf_pos.z ) );
-  		vec3 vSigmaY = vec3( dFdy( surf_pos.x ), dFdy( surf_pos.y ), dFdy( surf_pos.z ) );
-  		vec3 vN = surf_norm;		// normalized
-
-      vec3 R1 = cross( vSigmaY, vN );
-  		vec3 R2 = cross( vN, vSigmaX );
-
-      float fDet = dot( vSigmaX, R1 ) * faceDirection;
-
-      vec3 vGrad = sign( fDet ) * ( dHdxy.x * R1 + dHdxy.y * R2 );
-      return normalize( abs( fDet ) * surf_norm - vGrad );
-  	}
-  #endif
+      return vec4(color, 1.);
+    }
 #else
-  vec2 getMixedVectorValues(vec2 a, vec2 b) {
-    return mix(a, b, 0.5);
-  }
-
   vec2 dHdxy_per_texture_fwd(sampler2D tex, float scale) {
+    vec2 dSTdx = dFdx( vUv );
+    vec2 dSTdy = dFdy( vUv );
+
     float Hll = scale * texture2D(tex , vUv).x;
-    float dBx = scale * texture2D(tex , vUv).x - Hll;
-    float dBy = scale * texture2D(tex , vUv).x - Hll;
+    float dBx = scale * texture2D(tex , vUv + dSTdx).x - Hll;
+    float dBy = scale * texture2D(tex , vUv + dSTdy).x - Hll;
     return vec2( dBx, dBy );
   }
 
-  vec2 dHdxy_fwd(sampler2D tex1, sampler2D tex2) {
-    vec2 dHdx01 = dHdxy_per_texture_fwd(tex1, bumpScale);
-    vec2 dHdx02 = dHdxy_per_texture_fwd(tex2, bumpScale);
-    return getMixedVectorValues(dHdx01, dHdx02);
+  vec4 randomizeTileTextures(sampler2D tex1, sampler2D tex2) {
+    vec3 color1 = texture2D(tex1 , vUv).rgb;
+    vec3 color2 = texture2D(tex2 , vUv).rgb;
+
+    return vec4(mix(color1, color2, vUvMixAmount), 1.);
+  }
+
+  // dummy implementation
+  vec4 randomizeTileTexture(sampler2D tex) {
+    return texture2D(tex , vUv);
+  }
+#endif
+
+  vec2 dHdxy_fwd(sampler2D tex1) {
+    return dHdxy_per_texture_fwd(tex1, bumpScale);
+  }
+
+  vec2 dHdxy_fwd(sampler2D tex1, float scale) {
+    return dHdxy_per_texture_fwd(tex1, scale);
   }
 
   vec2 dHdxy_fwd(sampler2D tex1, sampler2D tex2, float scale) {
     vec2 dHdx01 = dHdxy_per_texture_fwd(tex1, scale);
     vec2 dHdx02 = dHdxy_per_texture_fwd(tex2, scale);
-    return getMixedVectorValues(dHdx01, dHdx02);
+    return mix(dHdx01, dHdx02, vUvMixAmount);
   }
 
-  #include <bumpmap_pars_fragment>
+  vec2 dHdxy_fwd(sampler2D tex1, sampler2D tex2) {
+    return dHdxy_fwd(tex1, tex2, bumpScale);
+  }
 #endif
 `;
 
 export const NORMAL_FRAGMENT_MAPS = `
 #ifdef USE_UV_MIX
   #ifdef USE_BUMPMAP
-    normal = perturbNormalArb( -vViewPosition, normal, dHdxy_fwd(), faceDirection );
+    normal = perturbNormalArb( -vViewPosition, normal, dHdxy_fwd(), faceDirection ).xyz;
   #endif
 #else
   #include <normal_fragment_maps>

@@ -1,6 +1,7 @@
 const initialState = {
   material: null,
   layer: null,
+  randomize: true,
 }
 
 function updateObject(oldObject, newValues) {
@@ -34,12 +35,23 @@ export default combineReducers({
 }); */
   switch (action.type) {
     case 'SET_MATERIAL': {
-      console.log('set_material', action);
       return updateObject(state, { material: action.payload });
     }
     case 'UPDATE_LAYER': {
       state.material.updateLayer(action.payload);
       return updateObject(state, { layer: action.payload });
+    }
+    case 'RANDOMIZE': {
+      const defines = { ...state.material.defines };
+      if (action.payload === true) {
+        defines.USE_UV_MIX = '';
+      } else {
+        delete defines.USE_UV_MIX;
+      }
+      state.material.setValues({ defines });
+      state.material.needsUpdate = true;
+
+     return updateObject(state, { randomize: action.payload });
     }
     default:
       return state;

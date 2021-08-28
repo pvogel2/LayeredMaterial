@@ -72,11 +72,17 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
      l.extendUniforms(this.uniforms);
   });
 
+  this.defines = {
+    PHONG: '',
+    USE_BUMPMAP: '',
+    USE_UV: '',
+    USE_UV_MIX: '',
+  };
+
   this.transparent =  false;
   this.lights = true;
   this.depthWrite = true;
   this.vertexShader = VERTEX_SHADER;
-  this.fragmentShader = this.getFragmentShader();
 
   this.bumpScale = parameters.bumpScale || 0;
   this.uniforms.bumpScale =  { value: this.bumpScale };
@@ -96,6 +102,8 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
   this.flatShading = false;
 
   this.uniformsNeedUpdate = true;
+
+  this.fragmentShader = this.getFragmentShader();
 
   this.setValues( parameters );
 }
@@ -121,16 +129,24 @@ updateLayer(layer) {
   }
 }
 
-getNormal(layerNormals) {
-  if (layerNormals.length > 1) {
-    return `
 // TODO: find correct sollution for slope and height ranges
-//normal = normalize(mix(${layerNormals[0].normal}, ${layerNormals[1].normal}, ${layerNormals[1].slope}));
-normal = normalize(mix(${layerNormals[0].normal}, ${layerNormals[1].normal}, 0.5));
-// #include <emissivemap_fragment>`;
+//  glsl: normal = normalize(mix(${layerNormals[0].normal}, ${layerNormals[1].normal}, ${layerNormals[1].slope}));
+getNormal(layerNormals) {
+  return layerNormals.length > 1
+    ? `normal = normalize(mix(${layerNormals[0].normal}, ${layerNormals[1].normal}, 0.5));`
+    : `normal = normalize(${layerNormals[0].normal});`
+  ;
+  // glsl: #include <emissivemap_fragment>`;
+}
+
+setValues(values) {
+  super.setValues(values);
+
+  if (typeof values.defines !== 'undefined') {
+    
+    this.fragmentShader = this.getFragmentShader();
+    console.log(this.fragmentShader);
   }
-  return '';
-  
 }
 
 getFragmentShader() {
@@ -220,17 +236,10 @@ getFragmentShader() {
       });
     }
   });
+
   totalHeights += ';';
 
   return `
-    #define PHONG
-  
-    #define USE_UV // needed here to create vUv
-    #define USE_BUMPMAP
-    #define USE_UV_MIX
-
-    //-------------------------------------------------------------------------------
-
     uniform vec3 diffuse;
     uniform vec3 emissive;
     uniform vec3 specular;
@@ -246,32 +255,6 @@ getFragmentShader() {
     ${UV_MIX_PARS_FRAGMENT}
 
     ${BUMPMAP_PARS_FRAGMENT}
-
-    #ifdef USE_UV_MIX
-    vec4 randomizeTileTextures(sampler2D tex1, sampler2D tex2) {
-      vec3 color1 = mix(texture2D(tex1 , vUvCent).rgb, texture2D(tex1 , vUvCorn).rgb, vUvMixThreshold);
-      vec3 color2 = mix(texture2D(tex2 , vUvCent).rgb, texture2D(tex2 , vUvCorn).rgb, vUvMixThreshold);
-
-      return vec4(getMixedVectorValues(color1, color2), 1.);
-    }
-
-    vec4 randomizeTileTexture(sampler2D tex) {
-      vec3 color = mix(texture2D(tex , vUvCent).rgb, texture2D(tex , vUvCorn).rgb, vUvMixThreshold);
-
-      return vec4(color, 1.);
-    }
-    #else
-    vec4 randomizeTileTextures(sampler2D tex1, sampler2D tex2) {
-      vec3 color1 = texture2D(tex1 , vUv).rgb;
-      vec3 color2 = texture2D(tex2 , vUv).rgb;
-
-      return vec4(mix(color1, color2, 0.5), 1.);
-    }
-
-    vec4 randomizeTileTexture(sampler2D tex) {
-      return texture2D(tex , vUv);
-    }
-    #endif
 
     #include <uv2_pars_fragment>
     #include <map_pars_fragment>
