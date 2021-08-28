@@ -168,9 +168,9 @@ export const UV_MIX_PARS_FRAGMENT =  `
 `;
 
 export const BUMPMAP_PARS_FRAGMENT = `
-#ifdef USE_UV_MIX
-  #ifdef USE_BUMPMAP
-  	uniform sampler2D bumpMap;
+#ifdef USE_BUMPMAP
+  #ifdef USE_UV_MIX
+    uniform sampler2D bumpMap;
   	uniform sampler2D bumpMap2;
   	uniform float bumpScale;
   
@@ -186,12 +186,6 @@ export const BUMPMAP_PARS_FRAGMENT = `
   		return vec2( dBx, dBy );
     }
   
-  	//vec2 dHdxy_fwd() {
-  	//	vec2 dHdx01 = dHdxy_per_texture_fwd(bumpMap, 0.04);
-  	//	vec2 dHdx02 = dHdxy_per_texture_fwd(bumpMap2, 0.07);
-    //  return getMixedVectorValues(dHdx01, dHdx02);
-  	//}
-
   	vec2 dHdxy_fwd(sampler2D tex1) {
   		return dHdxy_per_texture_fwd(tex1, bumpScale);
   	}
@@ -212,30 +206,54 @@ export const BUMPMAP_PARS_FRAGMENT = `
       return getMixedVectorValues(dHdx01, dHdx02);
   	}
 
-    vec3 perturbNormalArb( vec3 surf_pos, vec3 surf_norm, vec2 dHdxy ) {
+    vec3 perturbNormalArb( vec3 surf_pos, vec3 surf_norm, vec2 dHdxy, float faceDirection ) {
   		// Workaround for Adreno 3XX dFd*( vec3 ) bug. See #9988
-  		vec3 vSigmaX = vec3( dFdx( surf_pos.x ), dFdx( surf_pos.y ), dFdx( surf_pos.z ) );
+
+      vec3 vSigmaX = vec3( dFdx( surf_pos.x ), dFdx( surf_pos.y ), dFdx( surf_pos.z ) );
   		vec3 vSigmaY = vec3( dFdy( surf_pos.x ), dFdy( surf_pos.y ), dFdy( surf_pos.z ) );
   		vec3 vN = surf_norm;		// normalized
-  		vec3 R1 = cross( vSigmaY, vN );
+
+      vec3 R1 = cross( vSigmaY, vN );
   		vec3 R2 = cross( vN, vSigmaX );
-  		float fDet = dot( vSigmaX, R1 );
-  		fDet *= ( float( gl_FrontFacing ) * 2.0 - 1.0 );
-  		vec3 vGrad = sign( fDet ) * ( dHdxy.x * R1 + dHdxy.y * R2 );
-  
+
+      float fDet = dot( vSigmaX, R1 ) * faceDirection;
+
+      vec3 vGrad = sign( fDet ) * ( dHdxy.x * R1 + dHdxy.y * R2 );
       return normalize( abs( fDet ) * surf_norm - vGrad );
   	}
-  #else
-    #include <bumpmap_pars_fragment>
   #endif
+#else
+  vec2 getMixedVectorValues(vec2 a, vec2 b) {
+    return mix(a, b, 0.5);
+  }
 
+  vec2 dHdxy_per_texture_fwd(sampler2D tex, float scale) {
+    float Hll = scale * texture2D(tex , vUv).x;
+    float dBx = scale * texture2D(tex , vUv).x - Hll;
+    float dBy = scale * texture2D(tex , vUv).x - Hll;
+    return vec2( dBx, dBy );
+  }
+
+  vec2 dHdxy_fwd(sampler2D tex1, sampler2D tex2) {
+    vec2 dHdx01 = dHdxy_per_texture_fwd(tex1, bumpScale);
+    vec2 dHdx02 = dHdxy_per_texture_fwd(tex2, bumpScale);
+    return getMixedVectorValues(dHdx01, dHdx02);
+  }
+
+  vec2 dHdxy_fwd(sampler2D tex1, sampler2D tex2, float scale) {
+    vec2 dHdx01 = dHdxy_per_texture_fwd(tex1, scale);
+    vec2 dHdx02 = dHdxy_per_texture_fwd(tex2, scale);
+    return getMixedVectorValues(dHdx01, dHdx02);
+  }
+
+  #include <bumpmap_pars_fragment>
 #endif
 `;
 
 export const NORMAL_FRAGMENT_MAPS = `
 #ifdef USE_UV_MIX
   #ifdef USE_BUMPMAP
-    normal = perturbNormalArb( -vViewPosition, normal, dHdxy_fwd() );
+    normal = perturbNormalArb( -vViewPosition, normal, dHdxy_fwd(), faceDirection );
   #endif
 #else
   #include <normal_fragment_maps>

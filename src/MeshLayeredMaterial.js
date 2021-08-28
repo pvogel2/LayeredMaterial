@@ -110,6 +110,10 @@ updateLayer(layer) {
     this.uniforms[layer.uRangeId].value.set(layer.range[0], layer.range[1]);
     this.uniformsNeedUpdate = true;
   }
+  if (layer.rangeTrns) {
+    this.uniforms[layer.uRangeTrnsId].value.set(layer.rangeTrns[0], layer.rangeTrns[1]);
+    this.uniformsNeedUpdate = true;
+  }
   if (layer.slope) {
     this.uniforms[layer.uSlopeId].value.set(layer.slope[0], layer.slope[1]);
     this.uniforms[layer.uSlopeTrnsId].value = layer.slopeTransition;
@@ -125,7 +129,6 @@ getNormal(layerNormals) {
 normal = normalize(mix(${layerNormals[0].normal}, ${layerNormals[1].normal}, 0.5));
 // #include <emissivemap_fragment>`;
   }
-  console.log(layerNormals);
   return '';
   
 }
@@ -210,7 +213,7 @@ getFragmentShader() {
 
     if (l.bmId0) {
       layerNormals.push({
-        normal: `perturbNormalArb( -vViewPosition, normal, dHdxy_fwd(${l.bmId0}${l.bmId1 ? `, ${l.bmId1}` : ''}, ${uBumpScaleId} ) ) * ${hnId}`,
+        normal: `perturbNormalArb( -vViewPosition, normal, dHdxy_fwd(${l.bmId0}${l.bmId1 ? `, ${l.bmId1}` : ''}, ${uBumpScaleId} ), faceDirection ) * ${hnId}`,
         slope: (l.slope ? slpId : null),
         height: (l.range ? hId: null),
         bumpScale: l.bumpScale,
@@ -242,6 +245,9 @@ getFragmentShader() {
 
     ${UV_MIX_PARS_FRAGMENT}
 
+    ${BUMPMAP_PARS_FRAGMENT}
+
+    #ifdef USE_UV_MIX
     vec4 randomizeTileTextures(sampler2D tex1, sampler2D tex2) {
       vec3 color1 = mix(texture2D(tex1 , vUvCent).rgb, texture2D(tex1 , vUvCorn).rgb, vUvMixThreshold);
       vec3 color2 = mix(texture2D(tex2 , vUvCent).rgb, texture2D(tex2 , vUvCorn).rgb, vUvMixThreshold);
@@ -254,6 +260,18 @@ getFragmentShader() {
 
       return vec4(color, 1.);
     }
+    #else
+    vec4 randomizeTileTextures(sampler2D tex1, sampler2D tex2) {
+      vec3 color1 = texture2D(tex1 , vUv).rgb;
+      vec3 color2 = texture2D(tex2 , vUv).rgb;
+
+      return vec4(mix(color1, color2, 0.5), 1.);
+    }
+
+    vec4 randomizeTileTexture(sampler2D tex) {
+      return texture2D(tex , vUv);
+    }
+    #endif
 
     #include <uv2_pars_fragment>
     #include <map_pars_fragment>
@@ -272,8 +290,6 @@ getFragmentShader() {
     ${layerDiffuseMaps}
 
     ${layerUniforms}
-
-    ${BUMPMAP_PARS_FRAGMENT}
 
     #include <normalmap_pars_fragment>
     #include <specularmap_pars_fragment>

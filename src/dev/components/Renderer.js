@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 
 function Renderer() {
     const GRASS01_JPG = '/images/grass01.jpg';
@@ -9,6 +10,8 @@ function Renderer() {
     
     const ROCK01_JPG = '/images/rock01.jpg';
     const ROCK02_JPG = '/images/rock02.jpg';
+
+    const dispatch = useDispatch();
     
     function createGeometry() {
         const size = 10;
@@ -33,7 +36,6 @@ function Renderer() {
           min.min(v);
           max.max(v);
         }
-        console.log(min, max);
     
         geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( uv, 2 ) );
         geometry.computeVertexNormals();
@@ -81,6 +83,8 @@ function Renderer() {
       scene.add( mesh );
       scene.add( sunLight );
       scene.add( sunHelper );
+
+      dispatch({ type: 'SET_MATERIAL', payload: material });
     
       return { mesh, sunLight, sunHelper };
     }
