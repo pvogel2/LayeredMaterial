@@ -46,8 +46,8 @@ function Renderer() {
       const layers = [
         new MaterialLayer({
           id: 'grass',
-          range: [-2.5, 0],
-          rangeTrns: [0, 0.5],
+          range: [0, 0],
+          rangeTrns: [0.5, 0.5],
           //slope:[0.0, 0.2],
           slope:[0, 1],
           slopeTransition: 0.0,
@@ -75,12 +75,15 @@ function Renderer() {
       const mesh = new THREE.Mesh( geometry, material );
       mesh.receiveShadow = true;
       // mesh.rotateY(-3.14 * 0.5);
-      const sunLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+      const sunLight = new THREE.DirectionalLight( 0xffffff, 1.5 );
       sunLight.castShadow = true;
       sunLight.position.set(-10, 10, 10);
       const sunHelper = new THREE.DirectionalLightHelper( sunLight, 5 );
+
+      const ambientLight = new THREE.AmbientLight( 0x909090 ); // soft white light
     
       scene.add( mesh );
+      scene.add( ambientLight );
       scene.add( sunLight );
       scene.add( sunHelper );
 

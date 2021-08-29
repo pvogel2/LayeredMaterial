@@ -106,6 +106,7 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
   this.fragmentShader = this.getFragmentShader();
 
   this.setValues( parameters );
+  console.log(this.fragmentShader);
 }
 
 /**
@@ -160,12 +161,21 @@ getFragmentShader() {
   let layerBumpMaps = '';
   let layerDiffuseColors = '';
 
-  let layerDiffuseMixes = 'lyr_baseColor';
+  let layerDiffuseMixes = '';
   let layerSpecularMixes = 'lyr_specularStrength';
   let layerBaseColor = 'vec4(1., 1., 1., 1.)';
   let lyr_specularStrength = '1.0'; 
 
   let layerNormals = [];
+
+  
+  function sum(a, b) {
+    return `${a ? `${a} + ` : a}${b}`;
+  }
+
+  function mult(a, b) {
+    return `${a ? `${a} * ` : a}${b}`;
+  }
 
   this.layers.forEach((l) => {
     const tId = l.tId;
@@ -220,10 +230,10 @@ getFragmentShader() {
       layerDiffuseMixes = `mix(${layerDiffuseMixes}, ${diffuseColorId}, ${slpId} ${(l.range ? `* ${hId}` : '')})`;
       // layerSpecularMixes =  `mix(${layerSpecularMixes}, ${diffuseColorId}, ${slpId} ${(l.range ? `* ${hId}` : '')})`;
     } else if (l.range) {
-      layerDiffuseMixes = `${layerDiffuseMixes} + ${diffuseColorId} * ${hnId}`;//`mix(${layerDiffuseMixes}, ${diffuseColorId}, ${hId})`;
+      layerDiffuseMixes = sum(layerDiffuseMixes, `${diffuseColorId} * ${hnId}`);//`mix(${layerDiffuseMixes}, ${diffuseColorId}, ${hId})`;
       // layerSpecularMixes = `mix(${layerSpecularMixes}, ${diffuseColorId}, ${hId})`;
     } else {
-      layerBaseColor = `${layerBaseColor} * ${diffuseColorId}`;
+      layerBaseColor = mult(layerBaseColor, diffuseColorId);
       // lyr_specularStrength = `${lyr_specularStrength} * ${diffuseColorId}`;
     }
 
@@ -236,7 +246,7 @@ getFragmentShader() {
       });
     }
   });
-
+  layerDiffuseMixes = `${layerBaseColor} * ( ${layerDiffuseMixes} )`;
   totalHeights += ';';
 
   return `
