@@ -13,41 +13,61 @@ function Renderer() {
 
     const dispatch = useDispatch();
     
-    function createGeometry() {
-        const size = 10;
-        const min = new THREE.Vector3();
-        const max = new THREE.Vector3();
-        const geometry  = new THREE.PlaneGeometry( 5, 5, 10 , 10 );
-    
-        const uv = [];
-    
-        for (let i = 0; i < geometry.attributes.uv.count; i++) {
-          uv.push(i % (size + 1), (size - Math.floor(i / (size + 1))));
-        }
-    
-        const position = geometry.attributes.position;
-    
-        for (let i = 0; i < position.count * position.itemSize; i+=3) {
-          const v = new THREE.Vector3(
-            position.array[i],
-            position.array[i+1],
-            position.array[i+2]
-          );
-          min.min(v);
-          max.max(v);
-        }
-    
-        geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( uv, 2 ) );
-        geometry.computeVertexNormals();
-        return geometry;
+    function createPlaneGeometry() {
+      const size = 10;
+      const min = new THREE.Vector3();
+      const max = new THREE.Vector3();
+      const geometry  = new THREE.PlaneGeometry( 5, 5, 10 , 10 );
+  
+      const uv = [];
+  
+      for (let i = 0; i < geometry.attributes.uv.count; i++) {
+        uv.push(i % (size + 1), (size - Math.floor(i / (size + 1))));
       }
-    
+  
+      /* const position = geometry.attributes.position;
+  
+      for (let i = 0; i < position.count * position.itemSize; i+=3) {
+        const v = new THREE.Vector3(
+          position.array[i],
+          position.array[i+1],
+          position.array[i+2]
+        );
+        min.min(v);
+        max.max(v);
+      } */
+  
+      geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( uv, 2 ) );
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    function creatSphereGeometry() {
+      const size = 10;
+      const geometry  = new THREE.SphereGeometry( 2.5, 64, 32 );
+  
+      const uv = [];
+  
+      for (let i = 0; i < geometry.attributes.uv.count * 2; i++) {
+        uv.push(geometry.attributes.uv.array[i] * size);
+      }
+  
+      geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( uv, 2 ) );
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    function createGeometry() {
+      return creatSphereGeometry();
+      return createPlaneGeometry();
+    }
+
     function createMaterial() {
       const layers = [
         new MaterialLayer({
           id: 'grass',
-          range: [0, 0],
-          rangeTrns: [0.5, 0.5],
+          range: [-2.5, 0],
+          rangeTrns: [0, 0],
           //slope:[0.0, 0.2],
           slope:[0, 1],
           slopeTransition: 0.0,
@@ -57,8 +77,8 @@ function Renderer() {
         }),
         new MaterialLayer({
           id: 'rock',
-          range:[0, 4.0],
-          rangeTrns: [0.5, 0.5],
+          range:[0, 2.5],
+          rangeTrns: [0, 0],
           slope:[0, 1],
           map: [ROCK01_JPG, ROCK02_JPG],
           bumpMap: [ROCK2BUMP_PNG],

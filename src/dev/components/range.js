@@ -27,7 +27,6 @@ function Range(props) {
 
   function handleLimitChange(_, values) {
     setLimit(values);
-    console.log('limit', limit, trns);
     onChange({
       limit,
       trns,

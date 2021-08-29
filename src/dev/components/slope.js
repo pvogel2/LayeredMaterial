@@ -1,25 +1,36 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import Slider from '@material-ui/core/Slider';
 import Typography from '@material-ui/core/Typography';
 
 function Slope(props) {
   const {
-    onBoundariesChange = () => {},
-    onTransitionChange = () => {},
-    lower = 0,
-    upper = 1,
-    transition = 0,
+    onChange = () => {},
+    lowerLimit = 0,
+    upperLimit = 1,
+    lowerTrns = 0,
+    upperTrns = 0,
     min = 0,
     max = 1,
   } = props;
 
-  function handleBoundariesChange(event, values) {
-    onBoundariesChange(values);
+  const [limit, setLimit] = useState([lowerLimit, upperLimit]);
+  const [trns, setTrns] = useState([lowerTrns, upperTrns]);
+
+  function handleTrnsChange(_, values) {
+    setTrns([Math.abs(values[0]), Math.abs(values[1])]);
+    onChange({
+      limit,
+      trns,
+    });
   }
 
-  function handleTransitionChange(event, value) {
-    onTransitionChange(value);
+  function handleLimitChange(_, values) {
+    setLimit(values);
+    onChange({
+      limit,
+      trns,
+    });
   }
 
   const marks = [
@@ -41,34 +52,31 @@ function Slope(props) {
   return (
     <>
     <Typography gutterBottom>
-      slope Min Max
+      slope
     </Typography>
     <Slider
       min={min}
       max={max}
-      value={[lower, upper]}
-      onChange={handleBoundariesChange}
+      value={limit}
+      onChange={handleLimitChange}
       valueLabelDisplay="auto"
+      aria-labelledby="slope-limit-slider"
       valueLabelFormat={ (x) => `${x * 100}%` }
-      aria-labelledby="slope-slider"
       getAriaValueText={valuetext}
-      step={0.05}
       marks={marks}
+      step={0.05}
     />
-    <Typography gutterBottom>
-      slope Transition
-    </Typography>
     <Slider
-      min={min}
+      min={-1*max}
       max={max}
-      defaultValue={transition}
-      onChange={handleTransitionChange}
+      value={[-Math.abs(trns[0]), Math.abs(trns[1])]}
+      onChange={handleTrnsChange}
       valueLabelDisplay="auto"
+      aria-labelledby="slope-trns-slider"
       valueLabelFormat={ (x) => `${x * 100}%` }
-      aria-labelledby="slope-transition-slider"
       getAriaValueText={valuetext}
-      step={0.05}
       marks={marks}
+      step={0.05}
     />
     </>
   )

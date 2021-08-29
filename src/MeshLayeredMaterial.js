@@ -106,7 +106,7 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
   this.fragmentShader = this.getFragmentShader();
 
   this.setValues( parameters );
-  console.log(this.fragmentShader);
+  // console.log(this.fragmentShader);
 }
 
 /**
