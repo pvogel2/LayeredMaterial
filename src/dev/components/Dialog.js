@@ -24,12 +24,14 @@ const useStyles = makeStyles((theme) => ({
   },
   layer: {
     textTransform: 'capitalize',
+    width: '100%',
+    margin: 8
   },
   avatar: {
     backgroundColor: theme.palette.secondary.main,
   },
   root: {
-    margin: '0 16px',
+    margin: '0 8px',
   }
 }));
 
