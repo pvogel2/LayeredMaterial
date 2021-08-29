@@ -18,7 +18,7 @@ export default class MaterialLayer {
     this.range = config.range || null;
     this.rangeTrns = config.rangeTrns || [0, 0];
     this.slope = config.slope || null;
-    this.slopeTransition = Number.isFinite(config.slopeTransition) || 0.1;
+    this.slopeTrns = Number.isFinite(config.slopeTrns) || 0.1;
     this.bumpScale = config.bumpScale || 0;
 
     this.tId = `lyr_texture${config.id}`;
@@ -46,7 +46,7 @@ export default class MaterialLayer {
     }
     if (this.slope) {
       u[this.uSlopeId] = { type: 'vec2', value: new THREE.Vector2(this.slope[0], this.slope[1]) };
-      u[this.uSlopeTrnsId] = { type: 'float', value: this.slopeTransition };
+      u[this.uSlopeTrnsId] = { type: 'vec2', value: new THREE.Vector2(this.slopeTrns[0], this.slopeTrns[1]) };
     }
     if (this.texture) {
       const texture = textureLoader.load(this.texture);

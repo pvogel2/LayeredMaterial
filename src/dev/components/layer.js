@@ -19,13 +19,23 @@ function Layer(props) {
 
   function handleRangeChange(values) {
     const l = Object.assign({}, layer);
-    console.log('values', values);
 
     l.range[0] = values.limit[0];
     l.range[1] = values.limit[1];
     l.rangeTrns[0] = values.trns[0];
     l.rangeTrns[1] = values.trns[1];
     onBoundariesChange(l);
+  }
+
+  function handleSlopeChange(values) {
+    const l = Object.assign({}, layer);
+    console.log('values', values);
+
+    /* l.range[0] = values.limit[0];
+    l.range[1] = values.limit[1];
+    l.rangeTrns[0] = values.trns[0];
+    l.rangeTrns[1] = values.trns[1];
+    onBoundariesChange(l); */
   }
 
   function handleSlopeBoundariesChange(values) {
@@ -59,11 +69,11 @@ function Layer(props) {
     ? null
     : (
       <Slope
-        lower={layer.slope[0]}
-        upper={layer.slope[1]}
-        transition={layer.slopeTransition}
-        onBoundariesChange={handleSlopeBoundariesChange}
-        onTransitionChange={handleSlopeTransitionChange}
+        lowerLimit={layer.slope[0]}
+        upperLimit={layer.slope[1]}
+        lowerTrns={0}
+        upperTrns={0}
+        onChange={handleSlopeChange}
       />
     );
 

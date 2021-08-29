@@ -125,17 +125,32 @@ updateLayer(layer) {
   }
   if (layer.slope) {
     this.uniforms[layer.uSlopeId].value.set(layer.slope[0], layer.slope[1]);
-    this.uniforms[layer.uSlopeTrnsId].value = layer.slopeTransition;
     this.uniformsNeedUpdate = true;
   }
+  if (layer.slopeTrns) {
+    this.uniforms[layer.uSlopeTrnsId].value.set(layer.slopeTrns[0], layer.slopeTrns[1]);
+    this.uniformsNeedUpdate = true;
+  }
+}
+
+sum(a, b) {
+  return `${a ? `${a} + ` : a}${b}`;
+}
+
+mult(a, b) {
+  return `${a ? `${a} * ` : a}${b}`;
 }
 
 // TODO: find correct sollution for slope and height ranges
 //  glsl: normal = normalize(mix(${layerNormals[0].normal}, ${layerNormals[1].normal}, ${layerNormals[1].slope}));
 getNormal(layerNormals) {
-  return layerNormals.length > 1
-    ? `normal = normalize(mix(${layerNormals[0].normal}, ${layerNormals[1].normal}, 0.5));`
-    : `normal = normalize(${layerNormals[0].normal});`
+  let normals = '';
+  layerNormals.forEach(n => {
+    normals = this.sum(normals, n.normal);
+  });
+  return layerNormals.length
+    ? `normal = normalize(${normals});`
+    : ''
   ;
   // glsl: #include <emissivemap_fragment>`;
 }
@@ -167,15 +182,6 @@ getFragmentShader() {
   let lyr_specularStrength = '1.0'; 
 
   let layerNormals = [];
-
-  
-  function sum(a, b) {
-    return `${a ? `${a} + ` : a}${b}`;
-  }
-
-  function mult(a, b) {
-    return `${a ? `${a} * ` : a}${b}`;
-  }
 
   this.layers.forEach((l) => {
     const tId = l.tId;
@@ -230,10 +236,10 @@ getFragmentShader() {
       layerDiffuseMixes = `mix(${layerDiffuseMixes}, ${diffuseColorId}, ${slpId} ${(l.range ? `* ${hId}` : '')})`;
       // layerSpecularMixes =  `mix(${layerSpecularMixes}, ${diffuseColorId}, ${slpId} ${(l.range ? `* ${hId}` : '')})`;
     } else if (l.range) {
-      layerDiffuseMixes = sum(layerDiffuseMixes, `${diffuseColorId} * ${hnId}`);//`mix(${layerDiffuseMixes}, ${diffuseColorId}, ${hId})`;
+      layerDiffuseMixes = this.sum(layerDiffuseMixes, `${diffuseColorId} * ${hnId}`);//`mix(${layerDiffuseMixes}, ${diffuseColorId}, ${hId})`;
       // layerSpecularMixes = `mix(${layerSpecularMixes}, ${diffuseColorId}, ${hId})`;
     } else {
-      layerBaseColor = mult(layerBaseColor, diffuseColorId);
+      layerBaseColor = this.mult(layerBaseColor, diffuseColorId);
       // lyr_specularStrength = `${lyr_specularStrength} * ${diffuseColorId}`;
     }
 

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 
 function Renderer() {
+    const TEST01_JPG = '/images/testpattern.jpg';
     const GRASS01_JPG = '/images/grass01.jpg';
     const GRASS02_JPG = '/images/grass02.jpg';
     const GRASS1BUMP_PNG = '/images/grass01_bump256.png';
@@ -66,22 +67,33 @@ function Renderer() {
       const layers = [
         new MaterialLayer({
           id: 'grass',
-          range: [-2.5, 0],
+          range: [-2.5, -1],
           rangeTrns: [0, 0],
           //slope:[0.0, 0.2],
           slope:[0, 1],
-          slopeTransition: 0.0,
+          //slopeTransition: 0.0,
           map: [GRASS01_JPG, GRASS02_JPG],
           bumpMap: [GRASS1BUMP_PNG, GRASS2BUMP_PNG],
           bumpScale: 0.04,
         }),
         new MaterialLayer({
           id: 'rock',
-          range:[0, 2.5],
+          range:[-1, 1],
           rangeTrns: [0, 0],
           slope:[0, 1],
           map: [ROCK01_JPG, ROCK02_JPG],
           bumpMap: [ROCK2BUMP_PNG],
+          bumpScale: 0.08,
+        }),
+        new MaterialLayer({
+          id: 'test',
+          range: [1, 2.5],
+          rangeTrns: [0, 0],
+          //slope:[0.0, 0.2],
+          slope:[0, 1],
+          // slopeTrns: 0.0,
+          map: [TEST01_JPG],
+          bumpMap: [GRASS1BUMP_PNG],
           bumpScale: 0.08,
         }),
       ];
