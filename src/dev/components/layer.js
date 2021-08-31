@@ -10,7 +10,6 @@ import AccordionDetails from '@material-ui/core/AccordionDetails';
 function Layer(props) {
   const {
     onBoundariesChange = () => {},
-    onParametersChange = () => {},
     layer,
     min = 0,
     max = 100,
@@ -18,37 +17,27 @@ function Layer(props) {
   } = props;
 
   function handleRangeChange(values) {
-    const l = Object.assign({}, layer);
-
-    l.range[0] = values.limit[0];
-    l.range[1] = values.limit[1];
-    l.rangeTrns[0] = values.trns[0];
-    l.rangeTrns[1] = values.trns[1];
+    const { id, uRangeId, uRangeTrnsId } = { ...layer };
+    const l = {
+      id,
+      uRangeId,
+      uRangeTrnsId,
+      range: [...values.limit],
+      rangeTrns: [...values.trns],
+    };
     onBoundariesChange(l);
   }
 
   function handleSlopeChange(values) {
-    const l = Object.assign({}, layer);
-    console.log('values', values);
-
-    /* l.range[0] = values.limit[0];
-    l.range[1] = values.limit[1];
-    l.rangeTrns[0] = values.trns[0];
-    l.rangeTrns[1] = values.trns[1];
-    onBoundariesChange(l); */
-  }
-
-  function handleSlopeBoundariesChange(values) {
-    const l = Object.assign({}, layer);
-    l.slope[0] = values[0];
-    l.slope[1] = values[1];
+    const { id, uSlopeId, uSlopeTrnsId } = { ...layer };
+    const l = {
+      id,
+      uSlopeId,
+      uSlopeTrnsId,
+      slope: [...values.limit],
+      slopeTrns: [...values.trns],
+    };
     onBoundariesChange(l);
-  }
-
-  function handleSlopeTransitionChange(value) {
-    const l = Object.assign({}, layer);
-    l.slopeTransition = value;
-    onParametersChange(l);
   }
 
   const range = !layer.range

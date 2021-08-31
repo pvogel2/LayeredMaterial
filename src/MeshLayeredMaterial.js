@@ -47,9 +47,9 @@ void main() {
   #include <worldpos_vertex>
 	#include <shadowmap_vertex>
 
-  // TODO clarify the height direction
+  // TODO clarify the height and slope direction
   height = position.y;
-  slope = 1. - dot(vec3(0., 0., 1.), normalize(normal));
+  slope = dot(vec3(0., 1., 0.), normalize(normal));
 }
 `;
 
@@ -161,7 +161,7 @@ setValues(values) {
   if (typeof values.defines !== 'undefined') {
     
     this.fragmentShader = this.getFragmentShader();
-    console.log(this.fragmentShader);
+    // console.log(this.fragmentShader);
   }
 }
 
@@ -226,19 +226,16 @@ getFragmentShader() {
       layerNormalizedHeights += `float ${hnId} = ${hId} / lyrs_totalHeight;\n`;
     }
     
-    if (false && l.slope) {
+    if (l.slope) {
       layerUniforms += `uniform vec2 ${uSlopeId};\n`;
-      layerUniforms += `uniform float ${uSlopeTrnsId};\n`;
-      layerSlopes += `float ${slpId} = smoothstep(${uSlopeId}.x - ${uSlopeTrnsId}, ${uSlopeId}.x, slope) * (1. - smoothstep(${uSlopeId}.y - ${uSlopeTrnsId}, ${uSlopeId}.y, slope));\n`;
+      layerUniforms += `uniform vec2 ${uSlopeTrnsId};\n`;
+      layerSlopes += `float ${slpId} = smoothstep(${uSlopeId}.x - ${uSlopeTrnsId}.x, ${uSlopeId}.x, 1. - abs(slope)) * (1. - smoothstep(${uSlopeId}.y - ${uSlopeTrnsId}.y, ${uSlopeId}.y, 1. - abs(slope)));\n`;
     }
 
-    if (false && l.slope) {
-      layerDiffuseMixes = `mix(${layerDiffuseMixes}, ${diffuseColorId}, ${slpId} ${(l.range ? `* ${hId}` : '')})`;
-      // layerSpecularMixes =  `mix(${layerSpecularMixes}, ${diffuseColorId}, ${slpId} ${(l.range ? `* ${hId}` : '')})`;
-    } else if (l.range) {
-      layerDiffuseMixes = this.sum(layerDiffuseMixes, `${diffuseColorId} * ${hnId}`);//`mix(${layerDiffuseMixes}, ${diffuseColorId}, ${hId})`;
-      // layerSpecularMixes = `mix(${layerSpecularMixes}, ${diffuseColorId}, ${hId})`;
+    if (l.range || l.slope) {
+      layerDiffuseMixes = this.sum(layerDiffuseMixes, `${diffuseColorId} ${(l.range ? `* ${hnId}` : '')} ${l.slope ? `*  ${slpId}` : ''}`);
     } else {
+      // TODO: is this correct??
       layerBaseColor = this.mult(layerBaseColor, diffuseColorId);
       // lyr_specularStrength = `${lyr_specularStrength} * ${diffuseColorId}`;
     }
@@ -345,7 +342,6 @@ getFragmentShader() {
       vec4 lyr_baseColor = ${layerBaseColor};
     
       gl_FragColor = vec4( outgoingLight, diffuseColor.a ) * ${layerDiffuseMixes};
-
       #include <encodings_fragment>
       #include <premultiplied_alpha_fragment>
       #include <dithering_fragment>

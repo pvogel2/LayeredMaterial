@@ -18,7 +18,7 @@ export default class MaterialLayer {
     this.range = config.range || null;
     this.rangeTrns = config.rangeTrns || [0, 0];
     this.slope = config.slope || null;
-    this.slopeTrns = Number.isFinite(config.slopeTrns) || 0.1;
+    this.slopeTrns = config.rangeTrns || [0, 0];
     this.bumpScale = config.bumpScale || 0;
 
     this.tId = `lyr_texture${config.id}`;

@@ -67,10 +67,10 @@ function Renderer() {
       const layers = [
         new MaterialLayer({
           id: 'grass',
-          range: [-2.5, -1],
+          range: [-2.5, 2.5],
           rangeTrns: [0, 0],
           //slope:[0.0, 0.2],
-          slope:[0, 1],
+          slope:[-1, 1],
           //slopeTransition: 0.0,
           map: [GRASS01_JPG, GRASS02_JPG],
           bumpMap: [GRASS1BUMP_PNG, GRASS2BUMP_PNG],
@@ -84,7 +84,7 @@ function Renderer() {
           map: [ROCK01_JPG, ROCK02_JPG],
           bumpMap: [ROCK2BUMP_PNG],
           bumpScale: 0.08,
-        }),
+        }),/* 
         new MaterialLayer({
           id: 'test',
           range: [1, 2.5],
@@ -95,7 +95,7 @@ function Renderer() {
           map: [TEST01_JPG],
           bumpMap: [GRASS1BUMP_PNG],
           bumpScale: 0.08,
-        }),
+        }), */
       ];
 
       return new MeshLayeredMaterial({ layers, side: THREE.DoubleSide, wireframe: false, bumpScale: 1 });
