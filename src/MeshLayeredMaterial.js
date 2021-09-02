@@ -49,7 +49,7 @@ void main() {
 
   // TODO clarify the height and slope direction
   height = position.y;
-  slope = dot(vec3(0., 1., 0.), normalize(normal));
+  slope = 1. - 0.99 * dot(vec3(0., 1., 0.), normalize(normal));
 }
 `;
 
@@ -182,6 +182,7 @@ getFragmentShader() {
   let lyr_specularStrength = '1.0'; 
 
   let layerNormals = [];
+  const nLayers = `${this.layers.length}.`;
 
   this.layers.forEach((l) => {
     const tId = l.tId;
@@ -221,28 +222,28 @@ getFragmentShader() {
     if (l.range) {
       layerUniforms += `uniform vec2 ${uRangeId};\n`;
       layerUniforms += `uniform vec2 ${uRangeTrnsId};\n`;
-      layerHeights += `float ${hId} = smoothstep(${uRangeId}.x - ${uRangeTrnsId}.x,${uRangeId}.x, height) * (1. -smoothstep(${uRangeId}.y, ${uRangeId}.y + ${uRangeTrnsId}.y, height))\n;// * smoothstep(${uRangeId}.x, ${uRangeId}.y, height);\n`;
+      layerHeights += `float ${hId} = smoothstep(${uRangeId}.x - ${uRangeTrnsId}.x,${uRangeId}.x, height) * (1. -smoothstep(${uRangeId}.y, ${uRangeId}.y + ${uRangeTrnsId}.y, height))\n;`;
       totalHeights += `+${hId}`;
-      layerNormalizedHeights += `float ${hnId} = ${hId} / lyrs_totalHeight;\n`;
+      layerNormalizedHeights += `float ${hnId} = ${hId} / (${nLayers} * lyrs_totalHeight);\n`;
     }
     
     if (l.slope) {
       layerUniforms += `uniform vec2 ${uSlopeId};\n`;
       layerUniforms += `uniform vec2 ${uSlopeTrnsId};\n`;
-      layerSlopes += `float ${slpId} = smoothstep(${uSlopeId}.x - ${uSlopeTrnsId}.x, ${uSlopeId}.x, 1. - abs(slope)) * (1. - smoothstep(${uSlopeId}.y - ${uSlopeTrnsId}.y, ${uSlopeId}.y, 1. - abs(slope)));\n`;
+      layerSlopes += `float ${slpId} = smoothstep(${uSlopeId}.x - ${uSlopeTrnsId}.x, ${uSlopeId}.x, abs(slope)) * (1. - smoothstep(${uSlopeId}.y, ${uSlopeId}.y + ${uSlopeTrnsId}.y, abs(slope)));\n`;
     }
 
-    if (l.range || l.slope) {
+    //if (l.range || l.slope) {
       layerDiffuseMixes = this.sum(layerDiffuseMixes, `${diffuseColorId} ${(l.range ? `* ${hnId}` : '')} ${l.slope ? `*  ${slpId}` : ''}`);
-    } else {
+    //} else {
       // TODO: is this correct??
-      layerBaseColor = this.mult(layerBaseColor, diffuseColorId);
+    //  layerBaseColor = this.mult(layerBaseColor, diffuseColorId);
       // lyr_specularStrength = `${lyr_specularStrength} * ${diffuseColorId}`;
-    }
+    //}
 
     if (l.bmId0) {
       layerNormals.push({
-        normal: `perturbNormalArb( -vViewPosition, normal, dHdxy_fwd(${l.bmId0}${l.bmId1 ? `, ${l.bmId1}` : ''}, ${uBumpScaleId} ), faceDirection ) * ${hnId}`,
+        normal: `perturbNormalArb( -vViewPosition, normal, dHdxy_fwd(${l.bmId0}${l.bmId1 ? `, ${l.bmId1}` : ''}, ${uBumpScaleId} ), faceDirection ) ${(l.range ? `* ${hnId}` : '')} ${l.slope ? `*  ${slpId}` : ''}`,
         slope: (l.slope ? slpId : null),
         height: (l.range ? hId: null),
         bumpScale: l.bumpScale,
@@ -342,6 +343,7 @@ getFragmentShader() {
       vec4 lyr_baseColor = ${layerBaseColor};
     
       gl_FragColor = vec4( outgoingLight, diffuseColor.a ) * ${layerDiffuseMixes};
+      //gl_FragColor = vec4(lyr_u_slp_rock.x - lyr_u_slp_trns_rock.x, lyr_sloperock, lyr_sloperock, 1.);
       #include <encodings_fragment>
       #include <premultiplied_alpha_fragment>
       #include <dithering_fragment>

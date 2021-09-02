@@ -64,6 +64,7 @@ function Range(props) {
       aria-labelledby="range-limit-slider"
       getAriaValueText={valuetext}
       marks={marks}
+      step={0.1}
     />
     <Slider
       min={min}
@@ -74,6 +75,7 @@ function Range(props) {
       aria-labelledby="range-trns-slider"
       getAriaValueText={valuetext}
       marks={marks}
+      step={0.1}
     />
     </>
   )

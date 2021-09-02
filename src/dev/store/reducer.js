@@ -2,6 +2,7 @@ const initialState = {
   material: null,
   layer: null,
   randomize: true,
+  minmax: [-5, 5],
 }
 
 function updateObject(oldObject, newValues) {
@@ -36,6 +37,9 @@ export default combineReducers({
   switch (action.type) {
     case 'SET_MATERIAL': {
       return updateObject(state, { material: action.payload });
+    }
+    case 'SET_MINMAX': {
+      return updateObject(state, { minmax: [...action.payload] });
     }
     case 'UPDATE_LAYER': {
       state.material.updateLayer(action.payload);

@@ -1,36 +1,103 @@
 import React, { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { connect } from 'react-redux';
 
-function Renderer() {
-    const TEST01_JPG = '/images/testpattern.jpg';
-    const GRASS01_JPG = '/images/grass01.jpg';
-    const GRASS02_JPG = '/images/grass02.jpg';
-    const GRASS1BUMP_PNG = '/images/grass01_bump256.png';
-    const GRASS2BUMP_PNG = '/images/grass02_bump256.png';
-    const ROCK2BUMP_PNG = '/images/rock02_bump256.png';
-    
-    const ROCK01_JPG = '/images/rock01.jpg';
-    const ROCK02_JPG = '/images/rock02.jpg';
+function Renderer(props) {
+  const {dispatch } = props;
 
-    const dispatch = useDispatch();
+  const TEST01_JPG = '/images/testpattern.jpg';
+  const GRASS01_JPG = '/images/grass01.jpg';
+  const GRASS02_JPG = '/images/grass02.jpg';
+  const GRASS1BUMP_PNG = '/images/grass01_bump256.png';
+  const GRASS2BUMP_PNG = '/images/grass02_bump256.png';
+  const ROCK2BUMP_PNG = '/images/rock02_bump256.png';
+  
+  const ROCK01_JPG = '/images/rock01.jpg';
+  const ROCK02_JPG = '/images/rock02.jpg';
+  const ISLAND_PNG = '/images/island.png';
+
+  function createLandscapeGeometry() {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+
+      img.onload = () => {
+        console.log('img loaded');
+
+        const width = img.width;
+        const height = img.height;
+        const c = document.createElement('canvas');
+        c.width = width;
+        c.height = height;
     
-    function createPlaneGeometry() {
-      const size = 10;
-      const min = new THREE.Vector3();
-      const max = new THREE.Vector3();
-      const geometry  = new THREE.PlaneGeometry( 5, 5, 10 , 10 );
-  
-      const uv = [];
-  
-      for (let i = 0; i < geometry.attributes.uv.count; i++) {
-        uv.push(i % (size + 1), (size - Math.floor(i / (size + 1))));
+        const ctx = c.getContext( '2d' );
+        ctx.drawImage(img, 0, 0);
+    
+        const imgData = ctx.getImageData(0, 0, width, height);
+        const pixels = imgData.data;
+        const data = [];
+    
+        let j = 0;
+        let maxValue = 0;
+        let minValue = 0;
+        for (let i = 0; i < pixels.length; i += 4) {
+          let p = pixels[i] / 255 + pixels[i + 1];
+          if (i === 0) {
+            maxValue = minValue = p;
+          }  
+    
+          maxValue = Math.max(maxValue, p);
+          minValue = Math.min(minValue, p);
+          data[j++] = p;
+        }
+        const range = maxValue - minValue;
+        const scale = 10 / range;
+        const offset = minValue + range * 0.5;
+        const position = [];
+        const indices = [];
+        const uvs = [];
+        const scaledMin = Math.trunc( 0.98 * 10 * scale * (minValue - offset - 10)) / 10;
+        const scaledMax = Math.trunc( 1.02 * 10 * scale * (maxValue - offset - 10)) / 10;
+
+        dispatch({ type: 'SET_MINMAX', payload: [scaledMin, scaledMax] }); // extend minmax a little bit to prevent edge cases
+
+        for (let h = 0; h < height; h++) {
+          for (let w = 0; w < width; w++) {
+            const idx = h * width + w;
+            uvs.push(w / width * 50, 1 - h / height * 50);
+            position.push((w - 0.5 * width) * scale * 0.1, (data[idx] - offset - 10) * scale, (h - 0.5 * height) * scale * 0.1);
+            if (w < width - 1 && h < height - 1) {
+              indices.push(idx, idx + width, idx + 1);
+              indices.push(idx + 1, idx + width, idx + width + 1);
+            }
+          }
+        }
+        const geo  = new THREE.BufferGeometry();
+        geo.setIndex( indices );
+        geo.setAttribute( 'position', new THREE.Float32BufferAttribute( position, 3 ) );
+        geo.setAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
+        geo.computeVertexNormals();
+        resolve(geo);
       }
+      img.src = ISLAND_PNG;
+    });
+  }
+
+  function createPlaneGeometry() {
+    const size = 10;
+    const min = new THREE.Vector3();
+    const max = new THREE.Vector3();
+    const geometry  = new THREE.PlaneGeometry( 5, 5, 10 , 10 );
+
+    const uv = [];
+
+    for (let i = 0; i < geometry.attributes.uv.count; i++) {
+      uv.push(i % (size + 1), (size - Math.floor(i / (size + 1))));
+    }
   
-      /* const position = geometry.attributes.position;
+    /* const position = geometry.attributes.position;
   
-      for (let i = 0; i < position.count * position.itemSize; i+=3) {
-        const v = new THREE.Vector3(
-          position.array[i],
+    for (let i = 0; i < position.count * position.itemSize; i+=3) {
+      const v = new THREE.Vector3(
+        position.array[i],
           position.array[i+1],
           position.array[i+2]
         );
@@ -38,10 +105,10 @@ function Renderer() {
         max.max(v);
       } */
   
-      geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( uv, 2 ) );
-      geometry.computeVertexNormals();
-      return geometry;
-    }
+    geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( uv, 2 ) );
+    geometry.computeVertexNormals();
+    return geometry;
+  }
 
     function creatSphereGeometry() {
       const size = 10;
@@ -58,7 +125,8 @@ function Renderer() {
       return geometry;
     }
 
-    function createGeometry() {
+    async function createGeometry() {
+      return createLandscapeGeometry();
       return creatSphereGeometry();
       return createPlaneGeometry();
     }
@@ -67,7 +135,7 @@ function Renderer() {
       const layers = [
         new MaterialLayer({
           id: 'grass',
-          range: [-2.5, 2.5],
+          range: [-5, 0],
           rangeTrns: [0, 0],
           //slope:[0.0, 0.2],
           slope:[-1, 1],
@@ -78,35 +146,35 @@ function Renderer() {
         }),
         new MaterialLayer({
           id: 'rock',
-          range:[-1, 1],
+          range:[0, 1],
           rangeTrns: [0, 0],
           slope:[0, 1],
           map: [ROCK01_JPG, ROCK02_JPG],
           bumpMap: [ROCK2BUMP_PNG],
           bumpScale: 0.08,
-        }),/* 
+        }),
         new MaterialLayer({
           id: 'test',
-          range: [1, 2.5],
-          rangeTrns: [0, 0],
+          //range: [1, 2.5],
+          //rangeTrns: [0, 0],
           //slope:[0.0, 0.2],
-          slope:[0, 1],
+          //slope:[0, 1],
           // slopeTrns: 0.0,
           map: [TEST01_JPG],
           bumpMap: [GRASS1BUMP_PNG],
           bumpScale: 0.08,
-        }), */
+        }),
       ];
 
+      // return new THREE.MeshStandardMaterial();
       return new MeshLayeredMaterial({ layers, side: THREE.DoubleSide, wireframe: false, bumpScale: 1 });
     }
     
-    function createTestMesh(scene) {
-      const geometry = createGeometry();
+    async function createTestMesh(scene) {
+      const geometry = await createGeometry();
       const material = createMaterial();
       const mesh = new THREE.Mesh( geometry, material );
       mesh.receiveShadow = true;
-      // mesh.rotateY(-3.14 * 0.5);
       const sunLight = new THREE.DirectionalLight( 0xffffff, 1.5 );
       sunLight.castShadow = true;
       sunLight.position.set(-10, 10, 10);
@@ -124,7 +192,7 @@ function Renderer() {
       return { mesh, sunLight, sunHelper };
     }
 
-    useEffect(() => { 
+    useEffect(async () => { 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
         
@@ -148,7 +216,7 @@ function Renderer() {
           
         window.addEventListener( 'resize', onWindowResize, false );
   
-        createTestMesh(scene);
+        await createTestMesh(scene);
 
         camera.position.z = 5;
         controls.update();
@@ -168,4 +236,4 @@ function Renderer() {
     );
   }
   
-  export default Renderer;
+  export default connect()(Renderer);

@@ -38,7 +38,7 @@ const useStyles = makeStyles((theme) => ({
 let toggleDialog = false;
 
 function Dialog(props) {
-  const { randomize, layer, material, dispatch } = props;
+  const { minmax, randomize, layer, material, dispatch } = props;
 
   const [dialogOpen, setDialogOpen] = useState(true);
 
@@ -77,12 +77,12 @@ function Dialog(props) {
   if (!dialogOpen) return null;
 
   // const mLayers = material ? material.layers.map(l =>
-  const mLayers = material && material.layers.map(l => 
+  const mLayers = material && material.layers?.map(l => 
     <Layer
       className={classes.layer}
       key={l.id}
-      min={-5}
-      max= {5}
+      min={minmax[0]}
+      max= {minmax[1]}
       layer={l}
       onBoundariesChange={onLayerChange}
     />
@@ -120,6 +120,7 @@ function mapStateToProps(state) {
     material: state.material,
     layer: state.layer,
     randomize: state.randomize,
+    minmax: state.minmax,
   };
 };
 
