@@ -27,20 +27,48 @@ const plugins = [
 
 export default [
   {
+    external: ['three'],
     input: 'src/MeshLayeredMaterial.js',
     plugins,
     output: {
-      file: 'dist/MeshLayeredMaterial.js',
+      globals: {
+        three: 'THREE',
+      },
+      file: 'dist/js/MeshLayeredMaterial.js',
       format: 'iife',
       name: 'MeshLayeredMaterial'
     },
   }, 
   {
+    external: ['three'],
     input: 'src/MaterialLayer.js',
     plugins,
     output: {
-      file: 'dist/MaterialLayer.js',
+      globals: {
+        three: 'THREE',
+      },
+      file: 'dist/js/MaterialLayer.js',
       format: 'iife',
+      name: 'MaterialLayer',
+    }
+  },
+  {
+    external: ['three'],
+    input: 'src/MeshLayeredMaterial.js',
+    plugins,
+		output: {
+			name: 'MeshLayeredMaterial',
+			file: 'dist/jsm/MeshLayeredMaterial.js',
+			format: 'es'
+		},
+  }, 
+  {
+    external: ['three'],
+    input: 'src/MaterialLayer.js',
+    plugins,
+    output: {
+      file: 'dist/jsm/MaterialLayer.js',
+      format: 'es',
       name: 'MaterialLayer',
     }
   },

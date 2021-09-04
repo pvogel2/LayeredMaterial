@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 const  textureLoader = new THREE.TextureLoader();
 
 /**
@@ -17,9 +19,9 @@ export default class MaterialLayer {
     this.uSlopeTrnsId = `lyr_u_slp_trns_${config.id}`;
     this.range = config.range || [0, 0];
     this.rangeTrns = config.rangeTrns || [0, 0];
-    this.slope = config.slope || [0, 0];
+    this.slope = config.slope || [0, 1];
     this.slopeTrns = config.rangeTrns || [0, 0];
-    this.bumpScale = config.bumpScale || 0;
+    this.bumpScale = config.bumpScale || 0.02;
 
     this.tId = `lyr_texture${config.id}`;
     this.texture = config.map.length ? config.map[0] : null;

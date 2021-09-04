@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 import { BUMPMAP_PARS_FRAGMENT, UV_MIX_PARS_FRAGMENT, UV_MIX_FRAGMENT_BEGIN, NORMAL_FRAGMENT_MAPS } from './ShaderLib';
 
 const VERTEX_SHADER = `
@@ -6,6 +8,9 @@ const VERTEX_SHADER = `
 
 #define USE_UV
 #define USE_BUMPMAP
+
+// from LayeredMaterial
+uniform vec3 lyrDirection;
 
 varying vec3 vViewPosition;
 
@@ -44,9 +49,8 @@ void main() {
   #include <worldpos_vertex>
 	#include <shadowmap_vertex>
 
-  // TODO clarify the height and slope direction
-  height = position.y;
-  slope = 1. - 0.99 * dot(vec3(0., 1., 0.), normalize(normal));
+  height = dot(lyrDirection, position);
+  slope = 1. - 0.99 * dot(lyrDirection, normalize(normal));
 }
 `;
 
@@ -59,10 +63,15 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
 
   this.layers = parameters.layers ? parameters.layers : [];
 
+  this.direction = parameters.direction || new THREE.Vector3( 0.0, 1.0, 0.0 );
+
   this.uniforms = THREE.UniformsUtils.merge( [
     THREE.UniformsLib["common" ],
     THREE.UniformsLib["lights" ],
     THREE.UniformsLib["bumpmap" ],
+    {
+      lyrDirection: { value: this.direction },
+    }
   ] );
 
   this.layers.forEach(l => {
@@ -230,13 +239,13 @@ getFragmentShader() {
       layerSlopes += `float ${slpId} = smoothstep(${uSlopeId}.x - ${uSlopeTrnsId}.x, ${uSlopeId}.x, abs(slope)) * (1. - smoothstep(${uSlopeId}.y, ${uSlopeId}.y + ${uSlopeTrnsId}.y, abs(slope)));\n`;
     }
 
-    //if (l.range || l.slope) {
+    // if (l.range || l.slope) {
       layerDiffuseMixes = this.sum(layerDiffuseMixes, `${diffuseColorId} ${(l.range ? `* ${hnId}` : '')} ${l.slope ? `*  ${slpId}` : ''}`);
-    //} else {
+    // } else {
       // TODO: is this correct??
-    //  layerBaseColor = this.mult(layerBaseColor, diffuseColorId);
+      // layerBaseColor = this.mult(layerBaseColor, diffuseColorId);
       // lyr_specularStrength = `${lyr_specularStrength} * ${diffuseColorId}`;
-    //}
+    // }
 
     if (l.bmId0) {
       layerNormals.push({
@@ -340,8 +349,8 @@ getFragmentShader() {
 
       vec4 lyr_baseColor = ${layerBaseColor};
     
-      gl_FragColor = vec4( outgoingLight, diffuseColor.a ) * ${layerDiffuseMixes};
-      //gl_FragColor = vec4(lyr_u_slp_rock.x - lyr_u_slp_trns_rock.x, lyr_sloperock, lyr_sloperock, 1.);
+      gl_FragColor = vec4( outgoingLight, diffuseColor.a ) * ${layerDiffuseMixes} * 4.; // the last factor is just to fix the outcome
+
       #include <encodings_fragment>
       #include <premultiplied_alpha_fragment>
       #include <dithering_fragment>

@@ -2,7 +2,7 @@
   "name": "layered-material",
   "version": "0.0.1",
   "description": "A threejs material to manage texture layers.",
-  "main": "dist/index.js",
+  "main": "dist/MeshLayeredMaterial.js",
   "scripts": {
     "build": "rollup -c",
     "test": "npm run test",
