@@ -9,14 +9,11 @@ const VERTEX_SHADER = `
 
 varying vec3 vViewPosition;
 
-#ifndef FLAT_SHADED
-	varying vec3 vNormal;
-#endif
-
 #include <common>
 #include <uv_pars_vertex>
 #include <uv2_pars_vertex>
 #include <color_pars_vertex>
+#include <normal_pars_vertex>
 #include <shadowmap_pars_vertex>
 #include <logdepthbuf_pars_vertex>
 
@@ -279,6 +276,7 @@ getFragmentShader() {
     #include <bsdfs>
 
     #include <lights_pars_begin>
+    #include <normal_pars_fragment>
     #include <lights_phong_pars_fragment>
     #include <shadowmap_pars_fragment>
 
