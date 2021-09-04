@@ -3,6 +3,7 @@ import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 import Renderer from './Renderer';
 import Dialog from './Dialog';
+import SceneSettings from './SceneSettings';
 import reducer from '../store/reducer';
 
 const store = createStore(reducer);

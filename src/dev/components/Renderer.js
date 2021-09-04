@@ -175,12 +175,12 @@ function Renderer(props) {
       const material = createMaterial();
       const mesh = new THREE.Mesh( geometry, material );
       mesh.receiveShadow = true;
-      const sunLight = new THREE.DirectionalLight( 0xffffff, 1.5 );
+      const sunLight = new THREE.DirectionalLight( 0xffffff, 2.5 );
       sunLight.castShadow = true;
       sunLight.position.set(-10, 10, 10);
-      const sunHelper = new THREE.DirectionalLightHelper( sunLight, 5 );
+      const sunHelper = new THREE.DirectionalLightHelper( sunLight, 3 );
 
-      const ambientLight = new THREE.AmbientLight( 0x909090 ); // soft white light
+      const ambientLight = new THREE.AmbientLight( 0x494949 );
     
       scene.add( mesh );
       scene.add( ambientLight );
