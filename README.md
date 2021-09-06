@@ -3,7 +3,13 @@ A threejs material to manage texture layers.
 
 ** This is still work in progress **
 
-## Installation
+## Clone
+
+To clone the project:
+```bash
+git clone https://github.com/pvogel2/LayeredMaterial.git
+```
+## Installation (not yet released)
 
 Install the node module :
 ```bash
@@ -23,7 +29,7 @@ To include the plain javascripts in the browser:
 ```
 ## Usage
 
-To use the MeshLayeredMaterial you also need to use the MaterialLayer, a defined format for configuring all properties used for a Layer of the material.
+To use the MeshLayeredMaterial you also need to use the MaterialLayer, a defined format for configuring all properties used for a layer of the material.
 
 Basic support for tileable diffuse maps and bump maps is provided, also the option to randomize the tiling.
 Slope and range settings can be configured including transition areas for smooth blending between layers.
