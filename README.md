@@ -42,13 +42,13 @@ const new MehsLayeredMaterial({ layers: [], direction: new THREE.Vector3(0, 1, 0
 The material is based on phong material properties, currently without specularity support. This will be added soon.
 
 ### Properties:
-* layers: Array <MaterialLayer> Array of MaterialLayer objects stacked
+* layers: Array \<MaterialLayer\> Array of MaterialLayer objects stacked
 
 * direction: THREE.Vector3 The direction in world coordinates for stacking the layers
 
 ## Development
 
-Start dev server onport 5000:
+Start dev server on port 5000:
 ```
 npm run dev
 ```

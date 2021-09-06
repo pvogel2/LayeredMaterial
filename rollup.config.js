@@ -11,7 +11,7 @@ const serveConfig = {
   verbose:true,
   contentBase: ['dist', 'build', 'dev', 'node_modules'],
   host: 'localhost',
-  port: '5001',
+  port: '5000',
 };
 
 const plugins = [
