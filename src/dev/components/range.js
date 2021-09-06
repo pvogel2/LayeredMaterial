@@ -17,6 +17,9 @@ function Range(props) {
   const [limit, setLimit] = useState([lowerLimit, upperLimit]);
   const [trns, setTrns] = useState([lowerTrns, upperTrns]);
 
+  const maxTrns = Math.abs(max - min);
+  const minTrns = -1 * maxTrns;
+
   function handleTrnsChange(_, values) {
     setTrns([Math.abs(values[0]), Math.abs(values[1])]);
     onChange({
@@ -33,15 +36,20 @@ function Range(props) {
     });
   }
 
-  const marks = [
+  const marks = (mMin, mMax) => [
     {
-      value: min,
-      label: `${min}m`,
+      value: mMin,
+      label: `${mMin}m`,
 
     },
     {
-      value: max,
-      label: `${max}m`,
+      value: 0,
+      label: `0.0m`,
+
+    },
+   {
+      value: mMax,
+      label: `${mMax}m`,
 
     },
   ];
@@ -63,18 +71,18 @@ function Range(props) {
       valueLabelDisplay="auto"
       aria-labelledby="range-limit-slider"
       getAriaValueText={valuetext}
-      marks={marks}
+      marks={marks(min, max)}
       step={0.1}
     />
     <Slider
-      min={min}
-      max={max}
+      min={minTrns}
+      max={maxTrns}
       value={[-Math.abs(trns[0]), Math.abs(trns[1])]}
       onChange={handleTrnsChange}
       valueLabelDisplay="auto"
       aria-labelledby="range-trns-slider"
       getAriaValueText={valuetext}
-      marks={marks}
+      marks={marks(minTrns, maxTrns)}
       step={0.1}
     />
     </>

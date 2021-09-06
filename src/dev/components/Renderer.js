@@ -135,25 +135,25 @@ function Renderer(props) {
       const layers = [
         new MaterialLayer({
           id: 'grass',
-          range: [-5, 0],
+          range: [-10, -2],
           rangeTrns: [0, 0],
           //slope:[0.0, 0.2],
-          slope:[-1, 1],
-          //slopeTransition: 0.0,
+          slope:[0, 1],
+          slopeTransition: [0, 0],
           map: [GRASS01_JPG, GRASS02_JPG],
           bumpMap: [GRASS1BUMP_PNG, GRASS2BUMP_PNG],
           bumpScale: 0.04,
         }),
         new MaterialLayer({
           id: 'rock',
-          range:[0, 1],
+          range:[-2, 10],
           rangeTrns: [0, 0],
           slope:[0, 1],
           map: [ROCK01_JPG, ROCK02_JPG],
           bumpMap: [ROCK2BUMP_PNG],
           bumpScale: 0.08,
         }),
-        new MaterialLayer({
+        /*new MaterialLayer({
           id: 'test',
           //range: [1, 2.5],
           //rangeTrns: [0, 0],
@@ -163,7 +163,7 @@ function Renderer(props) {
           map: [TEST01_JPG],
           bumpMap: [GRASS1BUMP_PNG],
           bumpScale: 0.08,
-        }),
+        }),*/
       ];
 
       // return new THREE.MeshStandardMaterial();
@@ -175,12 +175,12 @@ function Renderer(props) {
       const material = createMaterial();
       const mesh = new THREE.Mesh( geometry, material );
       mesh.receiveShadow = true;
-      const sunLight = new THREE.DirectionalLight( 0xffffff, 2.5 );
+      const sunLight = new THREE.DirectionalLight( 0xffffff, 1.3 );
       sunLight.castShadow = true;
       sunLight.position.set(-10, 10, 10);
       const sunHelper = new THREE.DirectionalLightHelper( sunLight, 3 );
 
-      const ambientLight = new THREE.AmbientLight( 0x494949 );
+      const ambientLight = new THREE.AmbientLight( 0x090909 );
     
       scene.add( mesh );
       scene.add( ambientLight );
