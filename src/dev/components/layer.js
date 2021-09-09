@@ -17,26 +17,27 @@ function Layer(props) {
   } = props;
 
   function handleRangeChange(values) {
-    const { id, uRangeId, uRangeTrnsId } = { ...layer };
+    const { id } = { ...layer };
     const l = {
       id,
-      uRangeId,
-      uRangeTrnsId,
       range: [...values.limit],
       rangeTrns: [...values.trns],
     };
+    l.rangeName = layer.rangeName;
+    l.rangeTrnsName = layer.rangeTrnsName;
+
     onBoundariesChange(l);
   }
 
   function handleSlopeChange(values) {
-    const { id, uSlopeId, uSlopeTrnsId } = { ...layer };
+    const { id } = { ...layer };
     const l = {
       id,
-      uSlopeId,
-      uSlopeTrnsId,
       slope: [...values.limit],
       slopeTrns: [...values.trns],
     };
+    l.slopeName = layer.slopeName;
+    l.slopeTrnsName = layer.slopeTrnsName;
     onBoundariesChange(l);
   }
 

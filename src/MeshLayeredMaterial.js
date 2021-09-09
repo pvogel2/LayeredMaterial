@@ -57,26 +57,24 @@ void main() {
 class MeshLayeredMaterial extends THREE.ShaderMaterial {
   constructor(parameters) {
     super();
-  this.type = 'MeshLayeredMaterial';
+    this.type = 'MeshLayeredMaterial';
   
-  this.color = new THREE.Color( 0xffffff ); // diffuse
+    this.color = new THREE.Color( 0xffffff ); // diffuse
 
-  this.layers = parameters.layers ? parameters.layers : [];
+    this.layers = parameters.layers ? parameters.layers : [];
 
-  this.direction = parameters.direction || new THREE.Vector3( 0.0, 1.0, 0.0 );
+    this.direction = parameters.direction || new THREE.Vector3( 0.0, 1.0, 0.0 );
 
-  this.uniforms = THREE.UniformsUtils.merge( [
-    THREE.UniformsLib["common" ],
-    THREE.UniformsLib["lights" ],
-    THREE.UniformsLib["bumpmap" ],
-    {
-      lyrDirection: { value: this.direction },
-    }
-  ] );
+    this.uniforms = THREE.UniformsUtils.merge([
+      THREE.UniformsLib["common" ],
+      THREE.UniformsLib["lights" ],
+      THREE.UniformsLib["bumpmap" ],
+      {
+        lyrDirection: { value: this.direction },
+      }
+    ]);
 
-  this.layers.forEach(l => {
-     l.extendUniforms(this.uniforms);
-  });
+    this.layers.forEach((l) => l.extendUniforms(this.uniforms));
 
   this.defines = {
     PHONG: '',
@@ -122,19 +120,19 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
  */
 updateLayer(layer) {
   if (layer.range) {
-    this.uniforms[layer.uRangeId].value.set(layer.range[0], layer.range[1]);
+    this.uniforms[layer.rangeName].value.set(layer.range[0], layer.range[1]);
     this.uniformsNeedUpdate = true;
   }
   if (layer.rangeTrns) {
-    this.uniforms[layer.uRangeTrnsId].value.set(layer.rangeTrns[0], layer.rangeTrns[1]);
+    this.uniforms[layer.rangeTrnsName].value.set(layer.rangeTrns[0], layer.rangeTrns[1]);
     this.uniformsNeedUpdate = true;
   }
   if (layer.slope) {
-    this.uniforms[layer.uSlopeId].value.set(layer.slope[0], layer.slope[1]);
+    this.uniforms[layer.slopeName].value.set(layer.slope[0], layer.slope[1]);
     this.uniformsNeedUpdate = true;
   }
   if (layer.slopeTrns) {
-    this.uniforms[layer.uSlopeTrnsId].value.set(layer.slopeTrns[0], layer.slopeTrns[1]);
+    this.uniforms[layer.slopeTrnsName].value.set(layer.slopeTrns[0], layer.slopeTrns[1]);
     this.uniformsNeedUpdate = true;
   }
 }
@@ -173,7 +171,6 @@ setValues(values) {
 
 getFragmentShader() {
   let layerUniforms = '';
-
   let layerHeights = '';
   let layerSlopes = '';
   let layerDiffuseMaps = '';
@@ -183,63 +180,49 @@ getFragmentShader() {
   let layerDiffuseMixes = 'lyr_baseColor';
   let layerSpecularMixes = 'lyr_specularStrength';
   let layerBaseColor = 'vec4(0., 0., 0., 1.)';
-  let lyr_specularStrength = '1.0'; 
+  let layerSpecularStrength = '1.0'; 
 
   let layerNormals = [];
 
   this.layers.forEach((l) => {
-    const tId = l.tId;
-    const tId2 = l.tId2 ? l.tId2 : null;
-
-    const uBumpScaleId = l.bumpScaleId;
-
-    const uRangeId =l.uRangeId;
-    const uRangeTrnsId =l.uRangeTrnsId;
-    const uSlopeId = l.uSlopeId;
-    const uSlopeTrnsId = l.uSlopeTrnsId;
-
     const diffuseColorId = `lyr_sample${l.id}`;
-    const hId = `lyr_height${l.id}`;
-    const slpId = `lyr_slope${l.id}`;
 
-    if (l.bmId0) {
-      layerBumpMaps += `uniform sampler2D ${l.bmId0};\n`;
-      layerUniforms += `uniform float ${uBumpScaleId};\n`;
+    if (l.bumpMap[0]) {
+      layerBumpMaps += `uniform sampler2D ${l.bump0Name};\n`;
+      layerUniforms += `uniform float ${l.bumpScaleName};\n`;
     }
-    if (l.bmId1) {
-      layerBumpMaps += `uniform sampler2D ${l.bmId1};\n`;
+    if (l.bumpMap[1]) {
+      layerBumpMaps += `uniform sampler2D ${l.bump1Name};\n`;
     }
 
-    if (tId2) {
-      layerDiffuseMaps += `uniform sampler2D ${tId};\n`;
-      layerDiffuseMaps += `uniform sampler2D ${tId2};\n`;
-
-      layerDiffuseColors += `vec4 ${diffuseColorId} = randomizeTileTextures(${tId}, ${tId2});\n`;
+    if (l.map[1]) {
+      layerDiffuseMaps += `uniform sampler2D ${l.map0Name};\n`;
+      layerDiffuseMaps += `uniform sampler2D ${l.map1Name};\n`;
+      layerDiffuseColors += `vec4 ${diffuseColorId} = randomizeTileTextures(${l.map0Name}, ${l.map1Name});\n`;
     } else {
-      layerDiffuseMaps += `uniform sampler2D ${tId};\n`;
-
-      layerDiffuseColors += `vec4 ${diffuseColorId} = randomizeTileTexture(${tId});\n`;
+      layerDiffuseMaps += `uniform sampler2D ${l.map0Name};\n`;
+      layerDiffuseColors += `vec4 ${diffuseColorId} = randomizeTileTexture(${l.map0Name});\n`;
     }
 
     if (l.range) {
-      layerUniforms += `uniform vec2 ${uRangeId};\n`;
-      layerUniforms += `uniform vec2 ${uRangeTrnsId};\n`;
-      layerHeights += `float ${hId} = smoothstep(${uRangeId}.x - ${uRangeTrnsId}.x,${uRangeId}.x, height) * (1. -smoothstep(${uRangeId}.y, ${uRangeId}.y + ${uRangeTrnsId}.y, height))\n;`;
+      layerUniforms += `uniform vec2 ${l.rangeName};\n`;
+      layerUniforms += `uniform vec2 ${l.rangeTrnsName};\n`;
+      layerHeights += `float ${l.heightName} = smoothstep(${l.rangeName}.x - ${l.rangeTrnsName}.x,${l.rangeName}.x, height) * (1. -smoothstep(${l.rangeName}.y, ${l.rangeName}.y + ${l.rangeTrnsName}.y, height))\n;`;
     }
     
     if (l.slope) {
-      layerUniforms += `uniform vec2 ${uSlopeId};\n`;
-      layerUniforms += `uniform vec2 ${uSlopeTrnsId};\n`;
-      layerSlopes += `float ${slpId} = smoothstep(${uSlopeId}.x - ${uSlopeTrnsId}.x, ${uSlopeId}.x, abs(slope)) * (1. - smoothstep(${uSlopeId}.y, ${uSlopeId}.y + ${uSlopeTrnsId}.y, abs(slope)));\n`;
+      layerUniforms += `uniform vec2 ${l.slopeName};\n`;
+      layerUniforms += `uniform vec2 ${l.slopeTrnsName};\n`;
+      layerSlopes += `float ${l.slopeName} = smoothstep(${l.slopeName}.x - ${l.slopeTrnsName}.x, ${l.slopeName}.x, abs(slope)) * (1. - smoothstep(${l.slopeName}.y, ${l.slopeName}.y + ${l.slopeTrnsName}.y, abs(slope)));\n`;
     }
 
-    layerDiffuseMixes = `mix(${layerDiffuseMixes}, ${diffuseColorId}, 1. ${(l.range ? `* ${hId}` : '')} ${l.slope ? `*  ${slpId}` : ''})`;
+    layerDiffuseMixes = `mix(${layerDiffuseMixes}, ${diffuseColorId}, 1. ${l.hsModul})`;
 
-    if (l.bmId0) {
+    if (l.bumpMap[0]) {
       layerNormals.push({
-        normal: `perturbNormalArb( -vViewPosition, normal, dHdxy_fwd(${l.bmId0}${l.bmId1 ? `, ${l.bmId1}` : ''}, ${uBumpScaleId} ), faceDirection ) ${(l.range ? `* ${hId}` : '')} ${l.slope ? `*  ${slpId}` : ''}`,
-        slope: (l.slope ? slpId : null),
-        height: (l.range ? hId: null),
+        normal: `perturbNormalArb( -vViewPosition, normal, dHdxy_fwd(${l.bump0Name}${l.bumpMap[1] ? `, ${l.bump1Name}` : ''}, ${l.bumpScaleName} ), faceDirection ) ${l.hsModul}`,
+        slope: (l.slope ? l.slopeName : null),
+        height: (l.range ? l.heightName: null),
         bumpScale: l.bumpScale,
       });
     }
@@ -305,7 +288,7 @@ getFragmentShader() {
       #include <normal_fragment_begin>
       ${/*NORMAL_FRAGMENT_MAPS*/'// dummy fragment maps'}
 
-      // ${lyr_specularStrength}
+      // ${layerSpecularStrength}
 
       ${layerDiffuseColors}
 

@@ -132,6 +132,8 @@ function Renderer(props) {
     }
 
     function createMaterial() {
+      const  textureLoader = new THREE.TextureLoader();
+
       const layers = [
         new MaterialLayer({
           id: 'grass',
@@ -140,8 +142,8 @@ function Renderer(props) {
           //slope:[0.0, 0.2],
           slope:[0, 1],
           slopeTransition: [0, 0],
-          map: [GRASS01_JPG, GRASS02_JPG],
-          bumpMap: [GRASS1BUMP_PNG, GRASS2BUMP_PNG],
+          map: [textureLoader.load(GRASS01_JPG), textureLoader.load(GRASS02_JPG)],
+          bumpMap: [textureLoader.load(GRASS1BUMP_PNG), textureLoader.load(GRASS2BUMP_PNG)],
           bumpScale: 0.04,
         }),
         new MaterialLayer({
@@ -149,8 +151,8 @@ function Renderer(props) {
           range:[-2, 10],
           rangeTrns: [0, 0],
           slope:[0, 1],
-          map: [ROCK01_JPG, ROCK02_JPG],
-          bumpMap: [ROCK2BUMP_PNG],
+          map: [textureLoader.load(ROCK01_JPG), textureLoader.load(ROCK02_JPG)],
+          bumpMap: [textureLoader.load(ROCK2BUMP_PNG)],
           bumpScale: 0.08,
         }),
         /*new MaterialLayer({
