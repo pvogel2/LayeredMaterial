@@ -173,8 +173,6 @@ getFragmentShader() {
   let layerUniforms = '';
   let layerHeights = '';
   let layerSlopes = '';
-  let layerDiffuseMaps = '';
-  let layerBumpMaps = '';
   let layerDiffuseColors = '';
 
   let layerDiffuseMixes = 'lyr_baseColor';
@@ -187,21 +185,19 @@ getFragmentShader() {
   this.layers.forEach((l) => {
     const diffuseColorId = `lyr_sample${l.id}`;
 
-    if (l.bumpMap[0]) {
-      layerBumpMaps += `uniform sampler2D ${l.bump0Name};\n`;
+    if (l.useBump) {
+      layerUniforms += `uniform sampler2D ${l.bump0Name};\n`;
       layerUniforms += `uniform float ${l.bumpScaleName};\n`;
     }
-    if (l.bumpMap[1]) {
-      layerBumpMaps += `uniform sampler2D ${l.bump1Name};\n`;
+    if (l.mixBump) {
+      layerUniforms += `uniform sampler2D ${l.bump1Name};\n`;
     }
 
-    if (l.map[1]) {
-      layerDiffuseMaps += `uniform sampler2D ${l.map0Name};\n`;
-      layerDiffuseMaps += `uniform sampler2D ${l.map1Name};\n`;
-      layerDiffuseColors += `vec4 ${diffuseColorId} = randomizeTileTextures(${l.map0Name}, ${l.map1Name});\n`;
-    } else {
-      layerDiffuseMaps += `uniform sampler2D ${l.map0Name};\n`;
-      layerDiffuseColors += `vec4 ${diffuseColorId} = randomizeTileTexture(${l.map0Name});\n`;
+    if (l.useDiffuse) {
+      layerUniforms += `uniform sampler2D ${l.map0Name};\n`;
+    } 
+    if (l.mixDiffuse) {
+      layerUniforms += `uniform sampler2D ${l.map1Name};\n`;
     }
 
     if (l.range) {
@@ -218,9 +214,13 @@ getFragmentShader() {
 
     layerDiffuseMixes = `mix(${layerDiffuseMixes}, ${diffuseColorId}, 1. ${l.hsModul})`;
 
-    if (l.bumpMap[0]) {
+    if (l.mixDiffuse) {
+      layerDiffuseColors += `vec4 ${diffuseColorId} = randomizeTileTextures(${l.map0Name}${l.mixDiffuse ? `, ${l.map1Name}` : ''});\n`;
+    }
+
+    if (l.useBump) {
       layerNormals.push({
-        normal: `perturbNormalArb( -vViewPosition, normal, dHdxy_fwd(${l.bump0Name}${l.bumpMap[1] ? `, ${l.bump1Name}` : ''}, ${l.bumpScaleName} ), faceDirection ) ${l.hsModul}`,
+        normal: `perturbNormalArb( -vViewPosition, normal, dHdxy_fwd(${l.bump0Name}${l.mixBump ? `, ${l.bump1Name}` : ''}, ${l.bumpScaleName} ), faceDirection ) ${l.hsModul}`,
         slope: (l.slope ? l.slopeName : null),
         height: (l.range ? l.heightName: null),
         bumpScale: l.bumpScale,
@@ -257,10 +257,6 @@ getFragmentShader() {
     #include <normal_pars_fragment>
     #include <lights_phong_pars_fragment>
     #include <shadowmap_pars_fragment>
-
-    ${layerBumpMaps}
-
-    ${layerDiffuseMaps}
 
     ${layerUniforms}
 

@@ -177,17 +177,17 @@ export const BUMPMAP_PARS_FRAGMENT = `
   		return vec2( dBx, dBy );
     }
 
+    vec4 randomizeTileTextures(sampler2D tex) {
+      vec3 color = mix(texture2D(tex , vUvCent).rgb, texture2D(tex , vUvCorn).rgb, vUvMixThreshold);
+
+      return vec4(color, 1.);
+    }
+
     vec4 randomizeTileTextures(sampler2D tex1, sampler2D tex2) {
       vec3 color1 = mix(texture2D(tex1 , vUvCent).rgb, texture2D(tex1 , vUvCorn).rgb, vUvMixThreshold);
       vec3 color2 = mix(texture2D(tex2 , vUvCent).rgb, texture2D(tex2 , vUvCorn).rgb, vUvMixThreshold);
 
       return vec4(mix(color1, color2, vUvMixAmount), 1.);
-    }
-
-    vec4 randomizeTileTexture(sampler2D tex) {
-      vec3 color = mix(texture2D(tex , vUvCent).rgb, texture2D(tex , vUvCorn).rgb, vUvMixThreshold);
-
-      return vec4(color, 1.);
     }
 #else
   vec2 dHdxy_per_texture_fwd(sampler2D tex, float scale) {
@@ -200,16 +200,16 @@ export const BUMPMAP_PARS_FRAGMENT = `
     return vec2( dBx, dBy );
   }
 
+  // dummy implementation
+  vec4 randomizeTileTextures(sampler2D tex) {
+    return texture2D(tex , vUv);
+  }
+
   vec4 randomizeTileTextures(sampler2D tex1, sampler2D tex2) {
     vec3 color1 = texture2D(tex1 , vUv).rgb;
     vec3 color2 = texture2D(tex2 , vUv).rgb;
 
     return vec4(mix(color1, color2, vUvMixAmount), 1.);
-  }
-
-  // dummy implementation
-  vec4 randomizeTileTexture(sampler2D tex) {
-    return texture2D(tex , vUv);
   }
 #endif
 
