@@ -212,7 +212,7 @@ getFragmentShader() {
       layerSlopes += `float ${l.slopeName} = smoothstep(${l.slopeName}.x - ${l.slopeTrnsName}.x, ${l.slopeName}.x, abs(slope)) * (1. - smoothstep(${l.slopeName}.y, ${l.slopeName}.y + ${l.slopeTrnsName}.y, abs(slope)));\n`;
     }
 
-    layerDiffuseMixes = `mix(${layerDiffuseMixes}, ${diffuseColorId}, 1. ${l.hsModul})`;
+    layerDiffuseMixes = `mix(${layerDiffuseMixes}, ${diffuseColorId}, ${l.hsModul})`;
 
     if (l.mixDiffuse) {
       layerDiffuseColors += `vec4 ${diffuseColorId} = randomizeTileTextures(${l.map0Name}${l.mixDiffuse ? `, ${l.map1Name}` : ''});\n`;
@@ -220,7 +220,7 @@ getFragmentShader() {
 
     if (l.useBump) {
       layerNormals.push({
-        normal: `perturbNormalArb( -vViewPosition, normal, dHdxy_fwd(${l.bump0Name}${l.mixBump ? `, ${l.bump1Name}` : ''}, ${l.bumpScaleName} ), faceDirection ) ${l.hsModul}`,
+        normal: `perturbNormalArb( -vViewPosition, normal, dHdxy_fwd(${l.bump0Name}${l.mixBump ? `, ${l.bump1Name}` : ''}, ${l.bumpScaleName} ), faceDirection ) * ${l.hsModul}`,
         slope: (l.slope ? l.slopeName : null),
         height: (l.range ? l.heightName: null),
         bumpScale: l.bumpScale,

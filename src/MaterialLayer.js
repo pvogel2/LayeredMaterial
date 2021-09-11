@@ -73,7 +73,7 @@ export default class MaterialLayer {
   }
 
   get hsModul() {
-    return `${(this.range ? `* ${this.heightName}` : '')} ${this.slope ? `* ${this.slopeName}` : ''}`;
+    return `1. ${(this.range ? `* ${this.heightName}` : '')} ${this.slope ? `* ${this.slopeName}` : ''}`;
   }
   
   getTextureName(base, idx) {
