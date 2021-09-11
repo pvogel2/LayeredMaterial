@@ -125,12 +125,6 @@ function Renderer(props) {
       return geometry;
     }
 
-    async function createGeometry() {
-      return createLandscapeGeometry();
-      return creatSphereGeometry();
-      return createPlaneGeometry();
-    }
-
     function createMaterial() {
       const  textureLoader = new THREE.TextureLoader();
 
@@ -139,7 +133,6 @@ function Renderer(props) {
           id: 'grass',
           range: [-10, -2],
           rangeTrns: [0, 0],
-          //slope:[0.0, 0.2],
           slope:[0, 1],
           slopeTransition: [0, 0],
           map: [textureLoader.load(GRASS01_JPG), textureLoader.load(GRASS02_JPG)],
@@ -172,26 +165,32 @@ function Renderer(props) {
       return new MeshLayeredMaterial({ layers, side: THREE.DoubleSide, wireframe: false, bumpScale: 1 });
     }
     
-    async function createTestMesh(scene) {
-      const geometry = await createGeometry();
+    async function createTestMeshes(scene) {
       const material = createMaterial();
-      const mesh = new THREE.Mesh( geometry, material );
-      mesh.receiveShadow = true;
+
+      const landscapeMesh = new THREE.Mesh( await createLandscapeGeometry(), material );
+      const sphereMesh = new THREE.Mesh( await creatSphereGeometry(), material );
+      const planeMesh = new THREE.Mesh( await createPlaneGeometry(), material );
+
+      landscapeMesh.receiveShadow = true;
+      landscapeMesh.name = 'landscape';
+      sphereMesh.receiveShadow = true;
+      sphereMesh.name = 'sphere';
+      planeMesh.receiveShadow = true;
+      planeMesh.name = 'plane';
+
       const sunLight = new THREE.DirectionalLight( 0xffffff, 1.3 );
       sunLight.castShadow = true;
       sunLight.position.set(-10, 10, 10);
       const sunHelper = new THREE.DirectionalLightHelper( sunLight, 3 );
 
       const ambientLight = new THREE.AmbientLight( 0x090909 );
-    
-      scene.add( mesh );
+      dispatch({ type: 'SET_MESHES', payload: [landscapeMesh, sphereMesh, planeMesh] });
       scene.add( ambientLight );
       scene.add( sunLight );
       scene.add( sunHelper );
 
       dispatch({ type: 'SET_MATERIAL', payload: material });
-    
-      return { mesh, sunLight, sunHelper };
     }
 
     useEffect(async () => { 
@@ -206,19 +205,23 @@ function Renderer(props) {
         document.body.appendChild( renderer.domElement );
 
         function onWindowResize() {
-            const rects = document.body.getClientRects();
-            if (rects.length) {
-              const width = rects[0].width;
-              const height = rects[0].height;
-              renderer.setSize( width, height );
-              camera.aspect = width / height;
-              camera.updateProjectionMatrix();
-            }
-           }
+          const rects = document.body.getClientRects();
+          if (rects.length) {
+            const width = rects[0].width;
+            const height = rects[0].height;
+            renderer.setSize( width, height );
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+          }
+        }
           
         window.addEventListener( 'resize', onWindowResize, false );
-  
-        await createTestMesh(scene);
+
+        dispatch({ type: 'SET_SCENE', payload: scene });
+
+        await createTestMeshes(scene);
+
+        dispatch({ type: 'ADD_MESH', payload: 'landscape' });
 
         camera.position.z = 5;
         controls.update();

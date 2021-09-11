@@ -37,7 +37,7 @@ const useStyles = makeStyles((theme) => ({
 
 let toggleDialog = false;
 
-function Dialog(props) {
+function MaterialSettings(props) {
   const { minmax, randomize, layer, material, dispatch } = props;
 
   const [dialogOpen, setDialogOpen] = useState(true);
@@ -126,4 +126,4 @@ function mapStateToProps(state) {
 
 export default connect(
   mapStateToProps,
-)(Dialog);
+)(MaterialSettings);

@@ -2,7 +2,7 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 import Renderer from './Renderer';
-import Dialog from './Dialog';
+import MaterialSettings from './MaterialSettings';
 import SceneSettings from './SceneSettings';
 import reducer from '../store/reducer';
 
@@ -13,7 +13,8 @@ function App() {
     <div className="App">
       <Provider store={store}>
         <Renderer />
-        <Dialog />
+        <MaterialSettings />
+        <SceneSettings />
       </Provider>
     </div>
   );

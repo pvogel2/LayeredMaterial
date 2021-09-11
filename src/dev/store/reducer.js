@@ -38,13 +38,51 @@ export default combineReducers({
     case 'SET_MATERIAL': {
       return updateObject(state, { material: action.payload });
     }
+
+    case 'SET_SCENE': {
+      return updateObject(state, { scene: action.payload });
+    }
+
+    case 'ADD_MESH': {
+      const scene = state.scene;
+      const name = action.payload;
+      if (state.mesh === name) {
+        return state;
+      };
+
+      const mesh = state.meshes.find((m) => m.name === name);
+
+      if (scene && mesh) {
+        scene.add(mesh);
+      }
+      return updateObject(state, { mesh: name });
+    }
+
+    case 'REMOVE_MESH': {
+      const scene = state.scene;
+      const name = action.payload;
+      const mesh = state.meshes.find((m) => m.name === name);
+      console.log('REMOVE', name, mesh, scene);
+      if (scene && mesh) {
+        scene.remove(mesh);
+      }
+
+      return updateObject(state, { mesh: null });
+    }
+
+    case 'SET_MESHES': {
+      return updateObject(state, { meshes: action.payload });
+    }
+
     case 'SET_MINMAX': {
       return updateObject(state, { minmax: [...action.payload] });
     }
+
     case 'UPDATE_LAYER': {
       state.material.updateLayer(action.payload);
       return updateObject(state, { layer: action.payload });
     }
+
     case 'RANDOMIZE': {
       const defines = { ...state.material.defines };
       if (action.payload === true) {
