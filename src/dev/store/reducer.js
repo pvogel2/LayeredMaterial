@@ -46,16 +46,16 @@ export default combineReducers({
     case 'ADD_MESH': {
       const scene = state.scene;
       const name = action.payload;
-      if (state.mesh === name) {
-        return state;
-      };
 
       const mesh = state.meshes.find((m) => m.name === name);
 
-      if (scene && mesh) {
+      if (state.mesh !== name && scene && mesh) {
+        const minmax = [mesh.userData.min, mesh.userData.max];
         scene.add(mesh);
+
+        return updateObject(state, { mesh: name, minmax });
       }
-      return updateObject(state, { mesh: name });
+      return state;
     }
 
     case 'REMOVE_MESH': {

@@ -75,7 +75,11 @@ function Renderer(props) {
         geo.setAttribute( 'position', new THREE.Float32BufferAttribute( position, 3 ) );
         geo.setAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
         geo.computeVertexNormals();
-        resolve(geo);
+        resolve({
+          geometry: geo,
+          min: scaledMin,
+          max: scaledMax,
+        });
       }
       img.src = ISLAND_PNG;
     });
@@ -83,8 +87,6 @@ function Renderer(props) {
 
   function createPlaneGeometry() {
     const size = 10;
-    const min = new THREE.Vector3();
-    const max = new THREE.Vector3();
     const geometry  = new THREE.PlaneGeometry( 5, 5, 10 , 10 );
 
     const uv = [];
@@ -93,21 +95,13 @@ function Renderer(props) {
       uv.push(i % (size + 1), (size - Math.floor(i / (size + 1))));
     }
   
-    /* const position = geometry.attributes.position;
-  
-    for (let i = 0; i < position.count * position.itemSize; i+=3) {
-      const v = new THREE.Vector3(
-        position.array[i],
-          position.array[i+1],
-          position.array[i+2]
-        );
-        min.min(v);
-        max.max(v);
-      } */
-  
     geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( uv, 2 ) );
     geometry.computeVertexNormals();
-    return geometry;
+    return {
+      geometry,
+      min: -2.5,
+      max: 2.5,
+    };
   }
 
     function creatSphereGeometry() {
@@ -122,7 +116,11 @@ function Renderer(props) {
   
       geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( uv, 2 ) );
       geometry.computeVertexNormals();
-      return geometry;
+      return {
+        geometry,
+        min: -2.5,
+        max: 2.5,
+      };
     }
 
     function createMaterial() {
@@ -168,9 +166,19 @@ function Renderer(props) {
     async function createTestMeshes(scene) {
       const material = createMaterial();
 
-      const landscapeMesh = new THREE.Mesh( await createLandscapeGeometry(), material );
-      const sphereMesh = new THREE.Mesh( await creatSphereGeometry(), material );
-      const planeMesh = new THREE.Mesh( await createPlaneGeometry(), material );
+      const landscapeData = await createLandscapeGeometry();
+      const sphereData = await creatSphereGeometry();
+      const planeData = await createPlaneGeometry();
+
+      const landscapeMesh = new THREE.Mesh(landscapeData.geometry, material );
+      landscapeMesh.userData.min = landscapeData.min;
+      landscapeMesh.userData.max = landscapeData.max;
+      const sphereMesh = new THREE.Mesh(sphereData.geometry, material );
+      sphereMesh.userData.min = sphereData.min;
+      sphereMesh.userData.max = sphereData.max;
+      const planeMesh = new THREE.Mesh(planeData.geometry, material );
+      planeMesh.userData.min = planeData.min;
+      planeMesh.userData.max = planeData.max;
 
       landscapeMesh.receiveShadow = true;
       landscapeMesh.name = 'landscape';
@@ -186,6 +194,7 @@ function Renderer(props) {
 
       const ambientLight = new THREE.AmbientLight( 0x090909 );
       dispatch({ type: 'SET_MESHES', payload: [landscapeMesh, sphereMesh, planeMesh] });
+
       scene.add( ambientLight );
       scene.add( sunLight );
       scene.add( sunHelper );
