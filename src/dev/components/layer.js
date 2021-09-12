@@ -35,9 +35,14 @@ function Layer(props) {
       id,
       slope: [...values.limit],
       slopeTrns: [...values.trns],
+      slopeDstrbStrength: [...values.dstrbStrength],
+      slopeDstrbOctaves: [...values.dstrbOctaves],
     };
     l.slopeName = layer.slopeName;
     l.slopeTrnsName = layer.slopeTrnsName;
+    l.slopeDstrbStrengthName = layer.slopeDstrbStrengthName;
+    l.slopeDstrbOctavesName = layer.slopeDstrbOctavesName;
+
     onBoundariesChange(l);
   }
 
@@ -47,10 +52,8 @@ function Layer(props) {
       <Range
         min={min}
         max={max}
-        lowerLimit={layer.range[0]}
-        upperLimit={layer.range[1]}
-        lowerTrns={layer.rangeTrns[0]}
-        upperTrns={layer.rangeTrns[1]}
+        limit={[...layer.range]}
+        trns={[...layer.rangeTrns]}
         onChange={handleRangeChange}
       />
     );
@@ -59,10 +62,10 @@ function Layer(props) {
     ? null
     : (
       <Slope
-        lowerLimit={layer.slope[0]}
-        upperLimit={layer.slope[1]}
-        lowerTrns={0}
-        upperTrns={0}
+        limit={[...layer.slope]}
+        trns={[...layer.slopeTrns]}
+        slopeDstrbStrength = {[...layer.slopeDstrbStrength]}
+        slopeDstrbOctaves = {[...layer.slopeDstrbOctaves]}
         onChange={handleSlopeChange}
       />
     );

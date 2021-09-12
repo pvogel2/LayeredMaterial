@@ -6,16 +6,14 @@ import Typography from '@material-ui/core/Typography';
 function Range(props) {
   const {
     onChange = () => {},
-    lowerLimit = 0,
-    upperLimit = 100,
-    lowerTrns = 0,
-    upperTrns = 0,
+    limit = [0, 100],
+    trns = [0, 0],
     min = 0,
     max = 100,
   } = props;
 
-  const [limit, setLimit] = useState([lowerLimit, upperLimit]);
-  const [trns, setTrns] = useState([lowerTrns, upperTrns]);
+  const [vLimit, setLimit] = useState([...limit]);
+  const [vTrns, setTrns] = useState([...trns]);
 
   const maxTrns = Math.abs(max - min);
   const minTrns = -1 * maxTrns;
@@ -23,16 +21,16 @@ function Range(props) {
   function handleTrnsChange(_, values) {
     setTrns([Math.abs(values[0]), Math.abs(values[1])]);
     onChange({
-      limit,
-      trns,
+      limit: vLimit,
+      trns: vTrns,
     });
   }
 
   function handleLimitChange(_, values) {
     setLimit(values);
     onChange({
-      limit,
-      trns,
+      limit: vLimit,
+      trns: vTrns,
     });
   }
 
@@ -66,7 +64,7 @@ function Range(props) {
     <Slider
       min={min}
       max={max}
-      value={limit}
+      value={vLimit}
       onChange={handleLimitChange}
       valueLabelDisplay="auto"
       aria-labelledby="range-limit-slider"
@@ -77,7 +75,7 @@ function Range(props) {
     <Slider
       min={minTrns}
       max={maxTrns}
-      value={[-Math.abs(trns[0]), Math.abs(trns[1])]}
+      value={[-Math.abs(vTrns[0]), Math.abs(vTrns[1])]}
       onChange={handleTrnsChange}
       valueLabelDisplay="auto"
       aria-labelledby="range-trns-slider"

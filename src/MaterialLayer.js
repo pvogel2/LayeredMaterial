@@ -11,10 +11,19 @@ export default class MaterialLayer {
 
   constructor(config) {
     this.id = config.id;
+
     this.range = config.range || [0, 0];
+    this.rangeDstrbStrength = config.rangeDstrbStrength || [0, 0];
+    this.rangeDstrbOctaves = config.rangeDstrbOctaves || [0, 0];
     this.rangeTrns = config.rangeTrns || [0, 0];
+
     this.slope = config.slope || [0, 1];
+    this.slopeDstrbStrength = config.slopeDstrbStrength || [0.2, 0.2];
+    this.slopeDstrbOctaves = config.slopeDstrbOctaves || [1., 1.];
     this.slopeTrns = config.rangeTrns || [0, 0];
+
+    this.useRangeDisturb = false;
+    this.useSlopeDisturb = true;
 
     this.bumpScale = config.bumpScale || 0.02;
 
@@ -44,12 +53,28 @@ export default class MaterialLayer {
     return `lyr_rng_${this.id}`;
   }
 
+  get rangeDisturbStrengthName() {
+    return `lyr_rng_ds_${this.id}`;
+  }
+
+  get rangeDisturbOctavesName() {
+    return `lyr_rng_do_${this.id}`;
+  }
+
   get rangeTrnsName() {
     return `lyr_rng_trns_${this.id}`;
   }
 
   get slopeName() {
     return `lyr_slp_${this.id}`;
+  }
+
+  get slopeDstrbStrengthName() {
+    return `lyr_slp_ds_${this.id}`;
+  }
+
+  get slopeDstrbOctavesName() {
+    return `lyr_slp_do_${this.id}`;
   }
 
   get slopeTrnsName() {
@@ -84,10 +109,14 @@ export default class MaterialLayer {
     if (this.range) {
       u[this.rangeName] = { type: 'vec2', value: new THREE.Vector2(this.range[0], this.range[1]) };
       u[this.rangeTrnsName] = { type: 'vec2', value: new THREE.Vector2(this.rangeTrns[0], this.rangeTrns[1]) };
+      u[this.rangeDisturbStrengthName] = { type: 'vec2', value: new THREE.Vector2(0.2, 0.2) };
+      u[this.rangeDisturbOctavesName] = { type: 'vec2', value: new THREE.Vector2(1., 1.) };
     }
     if (this.slope) {
       u[this.slopeName] = { type: 'vec2', value: new THREE.Vector2(this.slope[0], this.slope[1]) };
       u[this.slopeTrnsName] = { type: 'vec2', value: new THREE.Vector2(this.slopeTrns[0], this.slopeTrns[1]) };
+      u[this.slopeDstrbStrengthName] = { type: 'vec2', value: new THREE.Vector2(0.2, 0.2) };
+      u[this.slopeDstrbOctavesName] = { type: 'vec2', value: new THREE.Vector2(1., 1.) };
     }
     if (this.useDiffuse) {
       if(!Array.isArray(this.map)) {

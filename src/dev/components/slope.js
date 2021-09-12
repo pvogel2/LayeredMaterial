@@ -6,30 +6,57 @@ import Typography from '@material-ui/core/Typography';
 function Slope(props) {
   const {
     onChange = () => {},
-    lowerLimit = 0,
-    upperLimit = 1,
-    lowerTrns = 0,
-    upperTrns = 0,
+    limit = [0, 1],
+    trns = [0, 0],
+    dstrbStrength = [0, 0],
+    dstrbOctaves = [0, 0],
     min = 0,
     max = 1,
   } = props;
 
-  const [limit, setLimit] = useState([lowerLimit, upperLimit]);
-  const [trns, setTrns] = useState([lowerTrns, upperTrns]);
+  const [vLimit, setLimit] = useState([...limit]);
+  const [vTrns, setTrns] = useState([...trns]);
+  const [vDstrbStrength, setDstrbStrength] = useState([...dstrbStrength]);
+  const [vDstrbOctaves, setDstrbOctaves] = useState([...dstrbOctaves]);
 
   function handleTrnsChange(_, values) {
     setTrns([Math.abs(values[0]), Math.abs(values[1])]);
     onChange({
-      limit,
-      trns,
+      limit: vLimit,
+      trns: vTrns,
+      dstrbStrength: vDstrbStrength,
+      dstrbOctaves: vDstrbOctaves,
     });
   }
 
   function handleLimitChange(_, values) {
     setLimit(values);
     onChange({
-      limit,
-      trns,
+      limit: vLimit,
+      trns: vTrns,
+      dstrbStrength: vDstrbStrength,
+      dstrbOctaves: vDstrbOctaves,
+    });
+  }
+
+  function handleDstrbStrengthChange(_, values) {
+    setDstrbStrength([Math.abs(values[0]), Math.abs(values[1])]);
+    onChange({
+      limit: vLimit,
+      trns: vTrns,
+      dstrbStrength: vDstrbStrength,
+      dstrbOctaves: vDstrbOctaves,
+    });
+  }
+
+  function handleDstrbOctavesChange(_, values) {
+    console.log('handleDstrbOctavesChange', values);
+    setDstrbOctaves([Math.abs(values[0]), Math.abs(values[1])]);
+    onChange({
+      limit: vLimit,
+      trns: vTrns,
+      dstrbStrength: vDstrbStrength,
+      dstrbOctaves: vDstrbOctaves,
     });
   }
 
@@ -41,6 +68,18 @@ function Slope(props) {
     {
       value: max,
       label: `${max * 100}%`,
+
+    },
+  ];
+
+  const marks2 = [
+    { 
+      value: -1,
+      label: `-1`,
+    },
+    {
+      value: 1,
+      label: `1`,
 
     },
   ];
@@ -57,7 +96,7 @@ function Slope(props) {
     <Slider
       min={min}
       max={max}
-      value={limit}
+      value={vLimit}
       onChange={handleLimitChange}
       valueLabelDisplay="auto"
       aria-labelledby="slope-limit-slider"
@@ -69,13 +108,37 @@ function Slope(props) {
     <Slider
       min={-1*max}
       max={max}
-      value={[-Math.abs(trns[0]), Math.abs(trns[1])]}
+      value={[-Math.abs(vTrns[0]), Math.abs(vTrns[1])]}
       onChange={handleTrnsChange}
       valueLabelDisplay="auto"
       aria-labelledby="slope-trns-slider"
       valueLabelFormat={ (x) => `${x * 100}%` }
       getAriaValueText={valuetext}
       marks={marks}
+      step={0.05}
+    />
+    <Slider
+      min={-1}
+      max={1}
+      value={[-Math.abs(vDstrbStrength[0]), Math.abs(vDstrbStrength[1])]}
+      onChange={handleDstrbStrengthChange}
+      valueLabelDisplay="auto"
+      aria-labelledby="slope-dstrb-strength-slider"
+      valueLabelFormat={ (x) => `${x}` }
+      getAriaValueText={(x) => `${x}`}
+      marks={marks2}
+      step={0.05}
+    />
+    <Slider
+      min={-10}
+      max={10}
+      value={[-Math.abs(vDstrbOctaves[0]), Math.abs(vDstrbOctaves[1])]}
+      onChange={handleDstrbOctavesChange}
+      valueLabelDisplay="auto"
+      aria-labelledby="slope-dstrb-octaves-slider"
+      valueLabelFormat={ (x) => `${x}` }
+      getAriaValueText={(x) => `${x}`}
+      marks={marks2}
       step={0.05}
     />
     </>

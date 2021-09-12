@@ -62,7 +62,6 @@ export default combineReducers({
       const scene = state.scene;
       const name = action.payload;
       const mesh = state.meshes.find((m) => m.name === name);
-      console.log('REMOVE', name, mesh, scene);
       if (scene && mesh) {
         scene.remove(mesh);
       }

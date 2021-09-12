@@ -135,6 +135,14 @@ updateLayer(layer) {
     this.uniforms[layer.slopeTrnsName].value.set(layer.slopeTrns[0], layer.slopeTrns[1]);
     this.uniformsNeedUpdate = true;
   }
+  if (layer.slopeDstrbStrength) {
+    this.uniforms[layer.slopeDstrbStrengthName].value.set(layer.slopeDstrbStrength[0], layer.slopeDstrbStrength[1]);
+    this.uniformsNeedUpdate = true;
+  }
+  if (layer.slopeDstrbOctaves) {
+    this.uniforms[layer.slopeDstrbOctavesName].value.set(layer.slopeDstrbOctaves[0], layer.slopeDstrbOctaves[1]);
+    this.uniformsNeedUpdate = true;
+  }
 }
 
 sum(a, b) {
@@ -165,7 +173,6 @@ setValues(values) {
   if (typeof values.defines !== 'undefined') {
     
     this.fragmentShader = this.getFragmentShader();
-    // console.log(this.fragmentShader);
   }
 }
 
@@ -202,14 +209,20 @@ getFragmentShader() {
 
     if (l.range) {
       layerUniforms += `uniform vec2 ${l.rangeName};\n`;
+      layerUniforms += `uniform vec2 ${l.rangeDisturbStrengthName};\n`;
+      layerUniforms += `uniform vec2 ${l.rangeDisturbOctavesName};\n`;
       layerUniforms += `uniform vec2 ${l.rangeTrnsName};\n`;
       layerHeights += `float ${l.heightName} = smoothstep(${l.rangeName}.x - ${l.rangeTrnsName}.x,${l.rangeName}.x, height) * (1. -smoothstep(${l.rangeName}.y, ${l.rangeName}.y + ${l.rangeTrnsName}.y, height))\n;`;
     }
     
     if (l.slope) {
       layerUniforms += `uniform vec2 ${l.slopeName};\n`;
+      layerUniforms += `uniform vec2 ${l.slopeDstrbStrengthName};\n`;
+      layerUniforms += `uniform vec2 ${l.slopeDstrbOctavesName};\n`;
       layerUniforms += `uniform vec2 ${l.slopeTrnsName};\n`;
-      layerSlopes += `float ${l.slopeName} = smoothstep(${l.slopeName}.x - ${l.slopeTrnsName}.x, ${l.slopeName}.x, abs(slope)) * (1. - smoothstep(${l.slopeName}.y, ${l.slopeName}.y + ${l.slopeTrnsName}.y, abs(slope)));\n`;
+      const lowerSlope = `abs(slope${l.useSlopeDisturb ? ` + ${l.slopeDstrbStrengthName}.x * noise(${l.slopeDstrbOctavesName}.x * 10. * vUv)` : ``})`;
+      const upperSlope = `abs(slope${l.useSlopeDisturb ? ` + ${l.slopeDstrbStrengthName}.y * noise(${l.slopeDstrbOctavesName}.y * 10. * vUv)` : ``})`;
+      layerSlopes += `float ${l.slopeName} = smoothstep(${l.slopeName}.x - ${l.slopeTrnsName}.x, ${l.slopeName}.x, ${lowerSlope}) * (1. - smoothstep(${l.slopeName}.y, ${l.slopeName}.y + ${l.slopeTrnsName}.y, ${upperSlope}));\n`;
     }
 
     layerDiffuseMixes = `mix(${layerDiffuseMixes}, ${diffuseColorId}, ${l.hsModul})`;
