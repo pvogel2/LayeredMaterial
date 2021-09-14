@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { BUMPMAP_PARS_FRAGMENT, UV_MIX_PARS_FRAGMENT, UV_MIX_FRAGMENT_BEGIN, NORMAL_FRAGMENT_MAPS } from './ShaderLib';
+import { BUMPMAP_PARS_FRAGMENT, UV_MIX_PARS_FRAGMENT, UV_MIX_FRAGMENT_BEGIN, TRIPLANAR, NORMAL_FRAGMENT_MAPS } from './ShaderLib';
 
 const VERTEX_SHADER = `
 // currently based on PHONG
@@ -24,6 +24,11 @@ varying vec3 vViewPosition;
 
 varying float height;
 varying float slope;
+
+varying vec2 vUvXY;
+varying vec2 vUvXZ;
+varying vec2 vUvYZ;
+varying vec3 triplanarNormal;
 
 void main() {
   #include <uv_vertex>
@@ -51,6 +56,12 @@ void main() {
 
   height = dot(lyrDirection, position);
   slope = 1. - 0.99 * dot(lyrDirection, normalize(normal));
+
+  vUv = position.xz;
+  vUvXY = position.xy;
+  vUvXZ = position.xz;
+  vUvYZ = position.yz;
+  triplanarNormal = normal;
 }
 `;
 
@@ -220,15 +231,15 @@ getFragmentShader() {
       layerUniforms += `uniform vec2 ${l.slopeDstrbStrengthName};\n`;
       layerUniforms += `uniform vec2 ${l.slopeDstrbOctavesName};\n`;
       layerUniforms += `uniform vec2 ${l.slopeTrnsName};\n`;
-      const lowerSlope = `abs(slope${l.useSlopeDisturb ? ` + ${l.slopeDstrbStrengthName}.x * noise(${l.slopeDstrbOctavesName}.x * 10. * vUv)` : ``})`;
-      const upperSlope = `abs(slope${l.useSlopeDisturb ? ` + ${l.slopeDstrbStrengthName}.y * noise(${l.slopeDstrbOctavesName}.y * 10. * vUv)` : ``})`;
+      const lowerSlope = `abs(slope${l.useSlopeDisturb ? ` + ${l.slopeDstrbStrengthName}.x * noise(${l.slopeDstrbOctavesName}.x * vUv)` : ``})`;
+      const upperSlope = `abs(slope${l.useSlopeDisturb ? ` + ${l.slopeDstrbStrengthName}.y * noise(${l.slopeDstrbOctavesName}.y * vUv)` : ``})`;
       layerSlopes += `float ${l.slopeName} = smoothstep(${l.slopeName}.x - ${l.slopeTrnsName}.x, ${l.slopeName}.x, ${lowerSlope}) * (1. - smoothstep(${l.slopeName}.y, ${l.slopeName}.y + ${l.slopeTrnsName}.y, ${upperSlope}));\n`;
     }
 
     layerDiffuseMixes = `mix(${layerDiffuseMixes}, ${diffuseColorId}, ${l.hsModul})`;
 
-    if (l.mixDiffuse) {
-      layerDiffuseColors += `vec4 ${diffuseColorId} = randomizeTileTextures(${l.map0Name}${l.mixDiffuse ? `, ${l.map1Name}` : ''});\n`;
+    if (l.useDiffuse) {
+      layerDiffuseColors += `vec4 ${diffuseColorId} = randomizeTileTextures(${l.map0Name}${l.mixDiffuse ? `, ${l.map1Name}` : ''}, triplanarNormal);\n`;
     }
 
     if (l.useBump) {
@@ -256,8 +267,6 @@ getFragmentShader() {
 
     ${UV_MIX_PARS_FRAGMENT}
 
-    ${BUMPMAP_PARS_FRAGMENT}
-
     #include <uv2_pars_fragment>
     #include <map_pars_fragment>
     #include <alphamap_pars_fragment>
@@ -276,7 +285,12 @@ getFragmentShader() {
     #include <normalmap_pars_fragment>
     #include <specularmap_pars_fragment>
     #include <logdepthbuf_pars_fragment>
-    
+
+    ${TRIPLANAR}
+
+    ${BUMPMAP_PARS_FRAGMENT}
+
+   
     varying float height;
     varying float slope;
 

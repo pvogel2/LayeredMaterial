@@ -5,8 +5,8 @@ function Renderer(props) {
   const {dispatch } = props;
 
   const TEST01_JPG = '/images/testpattern.jpg';
-  const GRASS01_JPG = '/images/grass01.jpg';
-  const GRASS02_JPG = '/images/grass02.jpg';
+  const GRASS01_JPG = '/images/testpattern.jpg';//grass01.jpg';
+  const GRASS02_JPG = '/images/testpattern.jpg';//grass02.jpg';
   const GRASS1BUMP_PNG = '/images/grass01_bump256.png';
   const GRASS2BUMP_PNG = '/images/grass02_bump256.png';
   const ROCK2BUMP_PNG = '/images/rock02_bump256.png';
@@ -62,7 +62,7 @@ function Renderer(props) {
         for (let h = 0; h < height; h++) {
           for (let w = 0; w < width; w++) {
             const idx = h * width + w;
-            uvs.push(w / width * 50, 1 - h / height * 50);
+            // uvs.push(w / width * 50, 1 - h / height * 50);
             position.push((w - 0.5 * width) * scale * 0.1, (data[idx] - offset - 10) * scale, (h - 0.5 * height) * scale * 0.1);
             if (w < width - 1 && h < height - 1) {
               indices.push(idx, idx + width, idx + 1);
@@ -73,7 +73,7 @@ function Renderer(props) {
         const geo  = new THREE.BufferGeometry();
         geo.setIndex( indices );
         geo.setAttribute( 'position', new THREE.Float32BufferAttribute( position, 3 ) );
-        geo.setAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
+        // geo.setAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
         geo.computeVertexNormals();
         resolve({
           geometry: geo,
@@ -123,6 +123,25 @@ function Renderer(props) {
       };
     }
 
+    function createBoxGeometry() {
+      const size = 10;
+      const geometry  = new THREE.BoxGeometry( 5, 5, 5, 5, 5, 5 );
+  
+      /* const uv = [];
+  
+      for (let i = 0; i < geometry.attributes.uv.count * 2; i++) {
+        uv.push(geometry.attributes.uv.array[i] * size);
+      }*/
+  
+      //geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( uv, 2 ) );
+      geometry.computeVertexNormals();
+      return {
+        geometry,
+        min: -2.5,
+        max: 2.5,
+      };
+    }
+
     function createMaterial() {
       const  textureLoader = new THREE.TextureLoader();
 
@@ -135,14 +154,14 @@ function Renderer(props) {
           slopeTransition: [0, 0],
           map: [textureLoader.load(GRASS01_JPG), textureLoader.load(GRASS02_JPG)],
           bumpMap: [textureLoader.load(GRASS1BUMP_PNG), textureLoader.load(GRASS2BUMP_PNG)],
-          bumpScale: 0.04,
+          bumpScale: 0.0,
         }),
         new MaterialLayer({
           id: 'rock',
           range:[-2, 10],
           rangeTrns: [0, 0],
           slope:[0, 1],
-          map: [textureLoader.load(ROCK01_JPG), textureLoader.load(ROCK02_JPG)],
+          map: [textureLoader.load(ROCK01_JPG)],//, textureLoader.load(ROCK02_JPG)],
           bumpMap: [textureLoader.load(ROCK2BUMP_PNG)],
           bumpScale: 0.08,
         }),
@@ -168,22 +187,34 @@ function Renderer(props) {
 
       const landscapeData = await createLandscapeGeometry();
       const sphereData = await creatSphereGeometry();
+      const boxData = await createBoxGeometry();
       const planeData = await createPlaneGeometry();
 
       const landscapeMesh = new THREE.Mesh(landscapeData.geometry, material );
       landscapeMesh.userData.min = landscapeData.min;
       landscapeMesh.userData.max = landscapeData.max;
+
       const sphereMesh = new THREE.Mesh(sphereData.geometry, material );
       sphereMesh.userData.min = sphereData.min;
       sphereMesh.userData.max = sphereData.max;
+
+      const boxMesh = new THREE.Mesh(boxData.geometry, material );
+      boxMesh.userData.min = boxData.min;
+      boxMesh.userData.max = boxData.max;
+
       const planeMesh = new THREE.Mesh(planeData.geometry, material );
       planeMesh.userData.min = planeData.min;
       planeMesh.userData.max = planeData.max;
 
       landscapeMesh.receiveShadow = true;
       landscapeMesh.name = 'landscape';
+
       sphereMesh.receiveShadow = true;
       sphereMesh.name = 'sphere';
+
+      boxMesh.receiveShadow = true;
+      boxMesh.name = 'box';
+
       planeMesh.receiveShadow = true;
       planeMesh.name = 'plane';
 
@@ -193,7 +224,7 @@ function Renderer(props) {
       const sunHelper = new THREE.DirectionalLightHelper( sunLight, 3 );
 
       const ambientLight = new THREE.AmbientLight( 0x090909 );
-      dispatch({ type: 'SET_MESHES', payload: [landscapeMesh, sphereMesh, planeMesh] });
+      dispatch({ type: 'SET_MESHES', payload: [landscapeMesh, sphereMesh, boxMesh, planeMesh] });
 
       scene.add( ambientLight );
       scene.add( sunLight );
