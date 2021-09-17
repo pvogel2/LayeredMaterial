@@ -57,9 +57,9 @@ void main() {
   height = dot(lyrDirection, position);
   slope = 1. - 0.99 * dot(lyrDirection, normalize(normal));
 
-  vUv = position.xz;
+  vUv = position.zx; // switched direction from xz to zx
   vUvXY = position.xy;
-  vUvXZ = position.xz;
+  vUvXZ = position.zx; // switched direction from xz to zx
   vUvYZ = position.yz;
   triplanarNormal = normal;
 }

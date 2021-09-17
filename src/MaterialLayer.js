@@ -18,20 +18,20 @@ export default class MaterialLayer {
     this.rangeTrns = config.rangeTrns || [0, 0];
 
     this.slope = config.slope || [0, 1];
-    this.slopeDstrbStrength = config.slopeDstrbStrength || [0.2, 0.2];
-    this.slopeDstrbOctaves = config.slopeDstrbOctaves || [1., 1.];
+    this.slopeDstrbStrength = config.slopeDstrbStrength || [0, 0];
+    this.slopeDstrbOctaves = config.slopeDstrbOctaves || [0, 0];
     this.slopeTrns = config.rangeTrns || [0, 0];
 
     this.useRangeDisturb = false;
     this.useSlopeDisturb = true;
 
-    this.bumpScale = config.bumpScale || 0.02;
+    this.bumpScale = config.bumpScale || 0;
 
     this.map = config.map || null;
     this.bumpMap = config.bumpMap || null;
 
     this.useDiffuse = !!this.map;
-    this.useBump = !!this.bumpMap;
+    this.useBump = !!this.bumpMap && !!this.bumpScale;
 
     this.mixDiffuse = !!(this.map?.length === 2);
     this.mixBump = !!(this.bumpMap?.length === 2);
@@ -115,8 +115,8 @@ export default class MaterialLayer {
     if (this.slope) {
       u[this.slopeName] = { type: 'vec2', value: new THREE.Vector2(this.slope[0], this.slope[1]) };
       u[this.slopeTrnsName] = { type: 'vec2', value: new THREE.Vector2(this.slopeTrns[0], this.slopeTrns[1]) };
-      u[this.slopeDstrbStrengthName] = { type: 'vec2', value: new THREE.Vector2(0.2, 0.2) };
-      u[this.slopeDstrbOctavesName] = { type: 'vec2', value: new THREE.Vector2(1., 1.) };
+      u[this.slopeDstrbStrengthName] = { type: 'vec2', value: new THREE.Vector2(this.slopeDstrbStrength[0], this.slopeDstrbStrength[1]) };
+      u[this.slopeDstrbOctavesName] = { type: 'vec2', value: new THREE.Vector2(this.slopeDstrbOctaves[0], this.slopeDstrbOctaves[1]) };
     }
     if (this.useDiffuse) {
       if(!Array.isArray(this.map)) {

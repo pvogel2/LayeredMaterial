@@ -60,6 +60,7 @@ vec4 triplanar(sampler2D map, vec3 normal) {
 	return cx + cy + cz;
 }
 
+#ifdef USE_UV_MIX
 void triplanarRotateUVs() {
   vec2 flYZ = floor(vUvYZ);
   vec2 frYZ = fract(vUvYZ);
@@ -201,7 +202,7 @@ vec4 triplanarCentDFDy(sampler2D map) {
 
 	return cx + cy + cz;
 }
-
+#endif
 #endif
 `;
 
@@ -302,12 +303,12 @@ ${NOISE}
 float vUvNoise;
 float vUvMixAmount;
 
+varying vec2 vUvYZ;
+varying vec2 vUvXZ;
+varying vec2 vUvXY;
+
 #ifdef USE_UV_MIX
   ${ROTATE_QAUDRANTS}
-
-  varying vec2 vUvYZ;
-  varying vec2 vUvXZ;
-  varying vec2 vUvXY;
 
   varying vec3 triplanarNormal;
 
@@ -354,7 +355,6 @@ export const BUMPMAP_PARS_FRAGMENT = `
 
 #ifdef USE_BUMPMAP
 
-  #ifdef USE_UV_MIX
   vec2 triplanar_dHdxy_per_texture_fwd(sampler2D tex, float scale) {
     vec2 dSTdxCent = dFdx( vUvCent );
     vec2 dSTdyCent = dFdy( vUvCent );
@@ -367,6 +367,7 @@ export const BUMPMAP_PARS_FRAGMENT = `
 
     return vec2( dBx, dBy );
   }
+  #ifdef USE_UV_MIX
 
   vec2 dHdxy_per_texture_fwd(sampler2D tex, float scale) {
       vec2 dSTdxCent = dFdx( vUvCent );
