@@ -1,6 +1,16 @@
 import * as THREE from 'three';
 
-import { BUMPMAP_PARS_FRAGMENT, UV_MIX_PARS_FRAGMENT, UV_MIX_FRAGMENT_BEGIN, TRIPLANAR, NORMAL_FRAGMENT_MAPS } from './ShaderLib';
+import {
+  BUMPMAP_PARS_FRAGMENT,
+  UV_MIX_PARS_FRAGMENT,
+  UV_MIX_FRAGMENT_BEGIN,
+  TRIPLANAR_PARS_VERTEX,
+  TRIPLANAR,
+  TRIPLANAR_FRAGMENT_BEGIN,
+  TRIPLANAR_PARS_FRAGMENT,
+  TRIPLANAR_COMMON,
+  NORMAL_FRAGMENT_MAPS,
+} from './ShaderLib';
 
 const VERTEX_SHADER = `
 // currently based on PHONG
@@ -15,6 +25,9 @@ uniform vec3 lyrDirection;
 varying vec3 vViewPosition;
 
 #include <common>
+
+${TRIPLANAR_COMMON}
+
 #include <uv_pars_vertex>
 #include <uv2_pars_vertex>
 #include <color_pars_vertex>
@@ -25,10 +38,7 @@ varying vec3 vViewPosition;
 varying float height;
 varying float slope;
 
-varying vec2 vUvXY;
-varying vec2 vUvXZ;
-varying vec2 vUvYZ;
-varying vec3 triplanarNormal;
+${TRIPLANAR_PARS_VERTEX}
 
 void main() {
   #include <uv_vertex>
@@ -58,10 +68,11 @@ void main() {
   slope = 1. - 0.99 * dot(lyrDirection, normalize(normal));
 
   vUv = position.zx; // switched direction from xz to zx
-  vUvXY = position.xy;
-  vUvXZ = position.zx; // switched direction from xz to zx
-  vUvYZ = position.yz;
   triplanarNormal = normal;
+
+  trplUV.x = position.zy; // switched direction from yz to zy
+  trplUV.y = position.zx; // switched direction from xz to zx
+  trplUV.z = position.xy;
 }
 `;
 
@@ -92,6 +103,7 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
     USE_BUMPMAP: '',
     USE_UV: '',
     USE_UV_MIX: '',
+    USE_TRIPLANAR: '',
   };
 
   this.transparent =  false;
@@ -239,7 +251,7 @@ getFragmentShader() {
     layerDiffuseMixes = `mix(${layerDiffuseMixes}, ${diffuseColorId}, ${l.hsModul})`;
 
     if (l.useDiffuse) {
-      layerDiffuseColors += `vec4 ${diffuseColorId} = randomizeTileTextures(${l.map0Name}${l.mixDiffuse ? `, ${l.map1Name}` : ''}, triplanarNormal);\n`;
+      layerDiffuseColors += `vec4 ${diffuseColorId} = randomizeTileTextures(${l.map0Name}${l.mixDiffuse ? `, ${l.map1Name}` : ''});\n`;
     }
 
     if (l.useBump) {
@@ -259,11 +271,15 @@ getFragmentShader() {
     uniform float shininess;
     uniform float opacity;
 
+    ${TRIPLANAR_COMMON}
+
     #include <common>
     #include <packing>
     #include <dithering_pars_fragment>
     #include <color_pars_fragment>
     #include <uv_pars_fragment>
+
+    ${TRIPLANAR_PARS_FRAGMENT}
 
     ${UV_MIX_PARS_FRAGMENT}
 
@@ -295,6 +311,8 @@ getFragmentShader() {
     varying float slope;
 
     void main() {
+      ${TRIPLANAR_FRAGMENT_BEGIN}
+
       ${UV_MIX_FRAGMENT_BEGIN}
 
       vec4 diffuseColor = vec4( diffuse, opacity );

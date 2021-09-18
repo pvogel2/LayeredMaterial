@@ -10,9 +10,7 @@ export const NOISE = `
 #if !defined MWM_NOISE
 #define MWM_NOISE
 float noise_random (in vec2 st) {
-  return fract(sin(dot(st.xy,
-                       vec2(12.9898,78.233)))*
-      43758.5453123);
+  return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
 }
 
 float noise (in vec2 st) {
@@ -39,170 +37,128 @@ float noise (in vec2 st) {
 // normal as global
 // float currently not supported
 
+export const TRIPLANAR_FRAGMENT_BEGIN = `
+trplUVFloor.x = floor(trplUV.x);
+trplUVFloor.y = floor(trplUV.y);
+trplUVFloor.z = floor(trplUV.z);
+
+trplUVFract.x = fract(trplUV.x);
+trplUVFract.y = fract(trplUV.y);
+trplUVFract.z = fract(trplUV.z);
+
+triplanarBF = normalize( abs( triplanarNormal ) );
+triplanarBF /= dot( triplanarBF, vec3( 1. ) );
+`;
+
+export const TRIPLANAR_COMMON = `
+struct TriplanarUV {
+  vec2 x; // YZ plane uv coords
+  vec2 y; // XZ plane uv coords
+  vec2 z; // XY plane uv coords
+};
+`;
+
+export const TRIPLANAR_PARS_VERTEX = `
+varying vec3 triplanarNormal;
+varying TriplanarUV trplUV;
+`;
+
+/**
+ * define all needed global fragment variables here (in header)
+ */
+export const TRIPLANAR_PARS_FRAGMENT = `
+  varying vec3 triplanarNormal;
+  varying TriplanarUV trplUV;
+ 
+  TriplanarUV trplUVCorn;
+  TriplanarUV trplUVCent;
+
+  TriplanarUV trplUVFloor;
+  TriplanarUV trplUVFract;
+
+  vec3 triplanarBF;
+ `;
+ 
 export const TRIPLANAR = `
 #if !defined MWM_TRIPLANAR
-#define MWM_TRIPLANAR
-vec4 triplanar(sampler2D map, vec3 normal) {
-  float scale = 1.;
-	vec3 bf = normalize( abs( normal ) );
-	bf /= dot( bf, vec3( 1. ) );
+  #define MWM_TRIPLANAR
 
-  // Triplanar mapping
-	vec2 tx = vUvYZ * scale;
-	vec2 ty = vUvXZ * scale;
-	vec2 tz = vUvXY * scale;
+  vec4 triplanarDFDx(sampler2D map, TriplanarUV tuv) {
+    vec2 dSTdx_x = dFdx( tuv.x );
+    vec2 dSTdx_y = dFdx( tuv.y );
+    vec2 dSTdx_z = dFdx( tuv.z );
+  
+    vec2 tx = (tuv.x + dSTdx_x);
+    vec2 ty = (tuv.y + dSTdx_y);
+    vec2 tz = (tuv.z + dSTdx_z);
+  
+    vec4 cx = texture2D(map, tx) * triplanarBF.x;
+    vec4 cy = texture2D(map, ty) * triplanarBF.y;
+    vec4 cz = texture2D(map, tz) * triplanarBF.z;
+  
+    return cx + cy + cz;
+  }
 
-  // Base color
-	vec4 cx = texture2D(map, tx) * bf.x;
-	vec4 cy = texture2D(map, ty) * bf.y;
-	vec4 cz = texture2D(map, tz) * bf.z;
+      
+  vec4 triplanarDFDy(sampler2D map, TriplanarUV tuv) {
+    vec2 dSTdy_x = dFdy( tuv.x );
+    vec2 dSTdy_y = dFdy( tuv.y );
+    vec2 dSTdy_z = dFdy( tuv.z );
+  
+    vec2 tx = (tuv.x + dSTdy_x);
+    vec2 ty = (tuv.y + dSTdy_y);
+    vec2 tz = (tuv.z + dSTdy_z);
+  
+    vec4 cx = texture2D(map, tx) * triplanarBF.x;
+    vec4 cy = texture2D(map, ty) * triplanarBF.y;
+    vec4 cz = texture2D(map, tz) * triplanarBF.z;
+  
+    return cx + cy + cz;
+  }
 
-	return cx + cy + cz;
-}
+  #ifdef USE_UV_MIX
+    void triplanarRotateUVs() {
 
-#ifdef USE_UV_MIX
-void triplanarRotateUVs() {
-  vec2 flYZ = floor(vUvYZ);
-  vec2 frYZ = fract(vUvYZ);
-  vec2 flXZ = floor(vUvXZ);
-  vec2 frXZ = fract(vUvXZ);
-  vec2 flXY = floor(vUvXY);
-  vec2 frXY = fract(vUvXY);
+      trplUVCorn.x = rotateQuadrants(trplUVFract.x, trplUVFloor.x);
+      trplUVCent.x = rotateAroundCenter(trplUVFract.x, random(trplUVFloor.x), vec2(0., 0.));
+    
+      trplUVCorn.y = rotateQuadrants(trplUVFract.y, trplUVFloor.y);
+      trplUVCent.y = rotateAroundCenter(trplUVFract.y, random(trplUVFloor.y), vec2(0., 0.));
+    
+      trplUVCorn.z = rotateQuadrants(trplUVFract.z, trplUVFloor.z);
+      trplUVCent.z = rotateAroundCenter(trplUVFract.z, random(trplUVFloor.z), vec2(0., 0.));
+    }
 
-  vUvYZCorn = rotateQuadrants(frYZ, flYZ);
-  vUvYZCent = rotateAroundCenter(frYZ, random(flYZ), vec2(0., 0.));
+    vec4 triplanar(sampler2D map) {
+      vec2 vUvYZCentDist = trplUVFract.x - vec2(0.5);
+      vec2 vUvXZCentDist = trplUVFract.y - vec2(0.5);
+      vec2 vUvXYCentDist = trplUVFract.z - vec2(0.5);
 
-  vUvXZCorn = rotateQuadrants(frXZ, flXZ);
-  vUvXZCent = rotateAroundCenter(frXZ, random(flXZ), vec2(0., 0.));
+      float vUvYZMixThreshold = smoothstep(1. - .4, 1.,  dot(vUvYZCentDist, vUvYZCentDist) * 4.0);
+      float vUvXZMixThreshold = smoothstep(1. - .4, 1.,  dot(vUvXZCentDist, vUvXZCentDist) * 4.0);
+      float vUvXYMixThreshold = smoothstep(1. - .4, 1.,  dot(vUvXYCentDist, vUvXYCentDist) * 4.0);
+    
+    	vec4 cx = mix(texture2D(map, trplUVCent.x), texture2D(map, trplUVCorn.x), vUvYZMixThreshold) * triplanarBF.x;
+    	vec4 cy = mix(texture2D(map, trplUVCent.y), texture2D(map, trplUVCorn.y), vUvXZMixThreshold) * triplanarBF.y;
+    	vec4 cz = mix(texture2D(map, trplUVCent.z), texture2D(map, trplUVCorn.z), vUvXYMixThreshold) * triplanarBF.z;
 
-  vUvXYCorn = rotateQuadrants(frXY, flXY);
-  vUvXYCent = rotateAroundCenter(frXY, random(flXY), vec2(0., 0.));
-}
-
-vec4 triplanarCent(sampler2D map, vec3 normal) {
-  float scale = 1.;
-	vec3 bf = normalize( abs( normal ) );
-	bf /= dot( bf, vec3( 1. ) );
-
-  // Triplanar mapping
-	vec2 tx = vUvYZCent * scale;
-	vec2 ty = vUvXZCent * scale; // position.zx
-	vec2 tz = vUvXYCent * scale;
-
-  // Base color
-	vec4 cx = texture2D(map, tx) * bf.x;
-	vec4 cy = texture2D(map, ty) * bf.y;
-	vec4 cz = texture2D(map, tz) * bf.z;
-
-	return cx + cy + cz;
-}
-
-vec4 triplanarCorn(sampler2D map, vec3 normal) {
-  float scale = 1.;
-	vec3 bf = normalize( abs( normal ) );
-	bf /= dot( bf, vec3( 1. ) );
-
-  // Triplanar mapping
-	vec2 tx = vUvYZCorn * scale;
-	vec2 ty = vUvXZCorn * scale;
-	vec2 tz = vUvXYCorn * scale;
-
-  // Base color
-	vec4 cx = texture2D(map, tx) * bf.x;
-	vec4 cy = texture2D(map, ty) * bf.y;
-	vec4 cz = texture2D(map, tz) * bf.z;
-
-	return cx + cy + cz;
-}
-
-vec4 triplanarCornDFDx(sampler2D map) {
-  float scale = 1.;
-	vec3 bf = normalize( abs( triplanarNormal ) );
-	bf /= dot( bf, vec3( 1. ) );
-
-  vec2 dSTdxYZCorn = dFdx( vUvYZCorn );
-  vec2 dSTdxXZCorn = dFdx( vUvXZCorn );
-  vec2 dSTdxXYCorn = dFdx( vUvXYCorn );
-
-  // Triplanar mapping
-	vec2 tx = (vUvYZCorn + dSTdxYZCorn) * scale;
-	vec2 ty = (vUvXZCorn + dSTdxXZCorn) * scale;
-	vec2 tz = (vUvXYCorn + dSTdxXYCorn) * scale;
-
-  // Base color
-	vec4 cx = texture2D(map, tx) * bf.x;
-	vec4 cy = texture2D(map, ty) * bf.y;
-	vec4 cz = texture2D(map, tz) * bf.z;
-
-	return cx + cy + cz;
-}
-
-vec4 triplanarCornDFDy(sampler2D map) {
-  float scale = 1.;
-	vec3 bf = normalize( abs( triplanarNormal ) );
-	bf /= dot( bf, vec3( 1. ) );
-
-  vec2 dSTdyYZCorn = dFdy( vUvYZCorn );
-  vec2 dSTdyXZCorn = dFdy( vUvXZCorn );
-  vec2 dSTdyXYCorn = dFdy( vUvXYCorn );
-
-  // Triplanar mapping
-	vec2 tx = (vUvYZCorn + dSTdyYZCorn) * scale;
-	vec2 ty = (vUvXZCorn + dSTdyXZCorn) * scale;
-	vec2 tz = (vUvXYCorn + dSTdyXYCorn) * scale;
-
-  // Base color
-	vec4 cx = texture2D(map, tx) * bf.x;
-	vec4 cy = texture2D(map, ty) * bf.y;
-	vec4 cz = texture2D(map, tz) * bf.z;
-
-	return cx + cy + cz;
-}
-
-vec4 triplanarCentDFDx(sampler2D map) {
-  float scale = 1.;
-	vec3 bf = normalize( abs( triplanarNormal ) );
-	bf /= dot( bf, vec3( 1. ) );
-
-  vec2 dSTdxYZCent = dFdx( vUvYZCent );
-  vec2 dSTdxXZCent = dFdx( vUvXZCent );
-  vec2 dSTdxXYCent = dFdx( vUvXYCent );
-
-  // Triplanar mapping
-	vec2 tx = (vUvYZCent + dSTdxYZCent) * scale;
-	vec2 ty = (vUvXZCent + dSTdxXZCent) * scale;
-	vec2 tz = (vUvXYCent + dSTdxXYCent) * scale;
-
-  // Base color
-	vec4 cx = texture2D(map, tx) * bf.x;
-	vec4 cy = texture2D(map, ty) * bf.y;
-	vec4 cz = texture2D(map, tz) * bf.z;
-
-	return cx + cy + cz;
-}
-
-vec4 triplanarCentDFDy(sampler2D map) {
-  float scale = 1.;
-	vec3 bf = normalize( abs( triplanarNormal ) );
-	bf /= dot( bf, vec3( 1. ) );
-
-  vec2 dSTdyYZCent = dFdy( vUvYZCent );
-  vec2 dSTdyXZCent = dFdy( vUvXZCent );
-  vec2 dSTdyXYCent = dFdy( vUvXYCent );
-
-  // Triplanar mapping
-	vec2 tx = (vUvYZCent + dSTdyYZCent) * scale;
-	vec2 ty = (vUvXZCent + dSTdyXZCent) * scale;
-	vec2 tz = (vUvXYCent + dSTdyXYCent) * scale;
-
-  // Base color
-	vec4 cx = texture2D(map, tx) * bf.x;
-	vec4 cy = texture2D(map, ty) * bf.y;
-	vec4 cz = texture2D(map, tz) * bf.z;
-
-	return cx + cy + cz;
-}
-#endif
+      return cx + cy + cz;
+    }
+  #else
+    vec4 triplanar(sampler2D map, TriplanarUV tuv) {
+      // Triplanar mapping
+    	vec2 tx = tuv.x;
+    	vec2 ty = tuv.y;
+    	vec2 tz = tuv.z;
+    
+      // Base color
+    	vec4 cx = texture2D(map, tx) * triplanarBF.x;
+    	vec4 cy = texture2D(map, ty) * triplanarBF.y;
+    	vec4 cz = texture2D(map, tz) * triplanarBF.z;
+    
+    	return cx + cy + cz;
+    }
+  #endif
 #endif
 `;
 
@@ -303,25 +259,11 @@ ${NOISE}
 float vUvNoise;
 float vUvMixAmount;
 
-varying vec2 vUvYZ;
-varying vec2 vUvXZ;
-varying vec2 vUvXY;
-
 #ifdef USE_UV_MIX
   ${ROTATE_QAUDRANTS}
 
-  varying vec3 triplanarNormal;
-
   vec2 vUvCorn;
   vec2 vUvCent;
-
-  vec2 vUvYZCorn;
-  vec2 vUvXZCorn;
-  vec2 vUvXYCorn;
-
-  vec2 vUvYZCent;
-  vec2 vUvXZCent;
-  vec2 vUvXYCent;
 
   vec2 vUvCentDist;
   float vUvMixThreshold;
@@ -354,22 +296,22 @@ export const BUMPMAP_PARS_FRAGMENT = `
 #include <bumpmap_pars_fragment>
 
 #ifdef USE_BUMPMAP
-
-  vec2 triplanar_dHdxy_per_texture_fwd(sampler2D tex, float scale) {
-    vec2 dSTdxCent = dFdx( vUvCent );
-    vec2 dSTdyCent = dFdy( vUvCent );
-    vec2 dSTdxCorn = dFdx( vUvCorn );
-    vec2 dSTdyCorn = dFdy( vUvCorn );
-
-    float Hll = scale * mix(texture2D(tex , vUvCent), texture2D(tex , vUvCorn), vUvMixThreshold).x;
-    float dBx = scale * mix(triplanarCentDFDx(tex), triplanarCornDFDx(tex), vUvMixThreshold).x - Hll;
-    float dBy = scale * mix(triplanarCentDFDy(tex), triplanarCornDFDy(tex), vUvMixThreshold).x - Hll;
-
-    return vec2( dBx, dBy );
-  }
   #ifdef USE_UV_MIX
 
-  vec2 dHdxy_per_texture_fwd(sampler2D tex, float scale) {
+    vec2 triplanar_dHdxy_per_texture_fwd(sampler2D tex, float scale) {
+      vec2 dSTdxCent = dFdx( vUvCent );
+      vec2 dSTdyCent = dFdy( vUvCent );
+      vec2 dSTdxCorn = dFdx( vUvCorn );
+      vec2 dSTdyCorn = dFdy( vUvCorn );
+  
+      float Hll = scale * mix(texture2D(tex , vUvCent), texture2D(tex , vUvCorn), vUvMixThreshold).x;
+      float dBx = scale * mix(triplanarDFDx(tex, trplUVCent), triplanarDFDx(tex, trplUVCorn), vUvMixThreshold).x - Hll;
+      float dBy = scale * mix(triplanarDFDy(tex, trplUVCent), triplanarDFDy(tex, trplUVCorn), vUvMixThreshold).x - Hll;
+  
+      return vec2( dBx, dBy );
+    }
+
+    vec2 dHdxy_per_texture_fwd(sampler2D tex, float scale) {
       vec2 dSTdxCent = dFdx( vUvCent );
   		vec2 dSTdyCent = dFdy( vUvCent );
   		vec2 dSTdxCorn = dFdx( vUvCorn );
@@ -382,61 +324,92 @@ export const BUMPMAP_PARS_FRAGMENT = `
       return vec2( dBx, dBy );
     }
 
-    vec4 randomizeTileTextures(sampler2D tex, vec3 normal) {
-      //vec3 color = mix(texture2D(tex , vUvCent).rgb, texture2D(tex , vUvCorn).rgb, vUvMixThreshold);
-      vec3 color = mix(triplanarCent(tex, normal).rgb, triplanarCorn(tex, normal).rgb, vUvMixThreshold);
+    vec4 randomizeTileTextures(sampler2D tex) {
+      #ifdef USE_TRIPLANAR
+        vec3 color = triplanar(tex).xyz;
+      #else
+        vec3 color = mix(texture2D(tex , vUvCent).rgb, texture2D(tex , vUvCorn).rgb, vUvMixThreshold);
+      #endif
 
       return vec4(color, 1.);
     }
 
-    vec4 randomizeTileTextures(sampler2D tex1, sampler2D tex2, vec3 normal) {
-      //vec3 color1 = mix(texture2D(tex1 , vUvCent).rgb, texture2D(tex1 , vUvCorn).rgb, vUvMixThreshold);
-      //vec3 color2 = mix(texture2D(tex2 , vUvCent).rgb, texture2D(tex2 , vUvCorn).rgb, vUvMixThreshold);
-
-      vec3 color1 = mix(triplanarCent(tex1, normal).rgb, triplanarCorn(tex1, normal).rgb, vUvMixThreshold);
-      vec3 color2 = mix(triplanarCent(tex2, normal).rgb, triplanarCorn(tex2, normal).rgb, vUvMixThreshold);
+    vec4 randomizeTileTextures(sampler2D tex1, sampler2D tex2) {
+      #ifdef USE_TRIPLANAR
+        vec3 color1 = triplanar(tex1).rgb;
+        vec3 color2 = triplanar(tex2).rgb;
+      #else
+        vec3 color1 = mix(texture2D(tex1 , vUvCent).rgb, texture2D(tex1 , vUvCorn).rgb, vUvMixThreshold);
+        vec3 color2 = mix(texture2D(tex2 , vUvCent).rgb, texture2D(tex2 , vUvCorn).rgb, vUvMixThreshold);
+      #endif
 
       return vec4(mix(color1, color2, vUvMixAmount), 1.);
     }
-#else
-  vec2 dHdxy_per_texture_fwd(sampler2D tex, float scale) {
-    vec2 dSTdx = dFdx( vUv );
-    vec2 dSTdy = dFdy( vUv );
+  #else
+    vec2 triplanar_dHdxy_per_texture_fwd(sampler2D tex, float scale) {
+      vec2 dSTdx = dFdx( vUv );
+      vec2 dSTdy = dFdy( vUv );
+  
+      // TODO Hll parameter not correct yet
+      float Hll = scale * texture2D(tex , vUv).x;
+      float dBx = scale * triplanarDFDx(tex, trplUV).x - Hll;
+      float dBy = scale * triplanarDFDy(tex, trplUV).x - Hll;
+  
+      return vec2( dBx, dBy );
+    }
 
-    float Hll = scale * texture2D(tex , vUv).x;
-    float dBx = scale * texture2D(tex , vUv + dSTdx).x - Hll;
-    float dBy = scale * texture2D(tex , vUv + dSTdy).x - Hll;
-    return vec2( dBx, dBy );
-  }
-
-  // dummy implementation
-  vec4 randomizeTileTextures(sampler2D tex, vec3 normal) {
-    // return texture2D(tex , vUv);
-    return triplanar(tex, normal);
-  }
-
-  vec4 randomizeTileTextures(sampler2D tex1, sampler2D tex2, vec3 normal) {
-    vec3 color1 = texture2D(tex1 , vUv).rgb;
-    vec3 color2 = texture2D(tex2 , vUv).rgb;
-
-    return vec4(mix(color1, color2, vUvMixAmount), 1.);
-  }
-#endif
+    vec2 dHdxy_per_texture_fwd(sampler2D tex, float scale) {
+      vec2 dSTdx = dFdx( vUv );
+      vec2 dSTdy = dFdy( vUv );
+  
+      float Hll = scale * texture2D(tex , vUv).x;
+      float dBx = scale * texture2D(tex , vUv + dSTdx).x - Hll;
+      float dBy = scale * texture2D(tex , vUv + dSTdy).x - Hll;
+      return vec2( dBx, dBy );
+    }
+  
+    // dummy implementation
+    vec4 randomizeTileTextures(sampler2D tex) {
+      #ifdef USE_TRIPLANAR
+        return triplanar(tex, trplUV);
+      #else
+        return texture2D(tex , vUv);
+      #endif
+    }
+  
+    vec4 randomizeTileTextures(sampler2D tex1, sampler2D tex2) {
+      #ifdef USE_TRIPLANAR
+        vec3 color1 = triplanar(tex1, trplUV).rgb;
+        vec3 color2 = triplanar(tex2, trplUV).rgb;
+      #else
+        vec3 color1 = texture2D(tex1 , vUv).rgb;
+        vec3 color2 = texture2D(tex2 , vUv).rgb;
+      #endif
+  
+      return vec4(mix(color1, color2, vUvMixAmount), 1.);
+    }
+  #endif
 
   vec2 dHdxy_fwd(sampler2D tex1) {
     return dHdxy_per_texture_fwd(tex1, bumpScale);
   }
 
   vec2 dHdxy_fwd(sampler2D tex1, float scale) {
-    //return dHdxy_per_texture_fwd(tex1, scale);
-    return triplanar_dHdxy_per_texture_fwd(tex1, scale);
+    #ifdef USE_TRIPLANAR
+      return triplanar_dHdxy_per_texture_fwd(tex1, scale);
+    #else
+      return dHdxy_per_texture_fwd(tex1, scale);
+    #endif
   }
 
   vec2 dHdxy_fwd(sampler2D tex1, sampler2D tex2, float scale) {
-    vec2 dHdx01 = dHdxy_per_texture_fwd(tex1, scale);
-    vec2 dHdx02 = dHdxy_per_texture_fwd(tex2, scale);
-    //vec2 dHdx01 = triplanar_dHdxy_per_texture_fwd(tex1, scale);
-    //vec2 dHdx02 = triplanar_dHdxy_per_texture_fwd(tex2, scale);
+    #ifdef USE_TRIPLANAR
+      vec2 dHdx01 = triplanar_dHdxy_per_texture_fwd(tex1, scale);
+      vec2 dHdx02 = triplanar_dHdxy_per_texture_fwd(tex2, scale);
+    #else
+      vec2 dHdx01 = dHdxy_per_texture_fwd(tex1, scale);
+      vec2 dHdx02 = dHdxy_per_texture_fwd(tex2, scale);
+    #endif
 
     return mix(dHdx01, dHdx02, vUvMixAmount);
   }

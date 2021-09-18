@@ -2,6 +2,7 @@ const initialState = {
   material: null,
   layer: null,
   randomize: true,
+  triplanar: true,
   minmax: [-5, 5],
 }
 
@@ -80,6 +81,19 @@ export default combineReducers({
     case 'UPDATE_LAYER': {
       state.material.updateLayer(action.payload);
       return updateObject(state, { layer: action.payload });
+    }
+
+    case 'TRIPLANAR': {
+      const defines = { ...state.material.defines };
+      if (action.payload === true) {
+        defines.USE_TRIPLANAR = '';
+      } else {
+        delete defines.USE_TRIPLANAR;
+      }
+      state.material.setValues({ defines });
+      state.material.needsUpdate = true;
+
+     return updateObject(state, { triplanar: action.payload });
     }
 
     case 'RANDOMIZE': {

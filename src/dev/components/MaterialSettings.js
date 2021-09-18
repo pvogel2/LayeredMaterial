@@ -8,6 +8,7 @@ import Avatar from '@material-ui/core/Avatar';
 import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 import Switch from '@material-ui/core/Switch';
+import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 
 import Layer from './layer.js';
@@ -38,11 +39,13 @@ const useStyles = makeStyles((theme) => ({
 let toggleDialog = false;
 
 function MaterialSettings(props) {
-  const { minmax, randomize, layer, material, dispatch } = props;
+  const { minmax, randomize, triplanar, layer, material, dispatch } = props;
 
   const [dialogOpen, setDialogOpen] = useState(true);
 
   const [randomizeChecked, setRandomizeChecked] = useState(randomize);
+
+  const [triplanarChecked, setTriplanarChecked] = useState(triplanar);
 
   function handleKeyDown(e) {
     if (e.key !== 'm') return;
@@ -59,6 +62,12 @@ function MaterialSettings(props) {
     const checked = event.target.checked;
     dispatch({ type: 'RANDOMIZE', payload: checked });
     setRandomizeChecked(checked);
+  }
+
+  function onTriplanarChange(event) {
+    const checked = event.target.checked;
+    dispatch({ type: 'TRIPLANAR', payload: checked });
+    setTriplanarChecked(checked);
   }
 
   function onClose() {
@@ -105,10 +114,16 @@ function MaterialSettings(props) {
         subheader="Changes applied on the fly"
       />
       <CardContent className={classes.root}>
+        <FormGroup>
         <FormControlLabel
           control={<Switch checked={randomizeChecked} onChange={onRandomizeChange} name="randomization" />}
-          label="Tile Randomization"
+          label="Tile randomization"
         />
+        <FormControlLabel
+          control={<Switch checked={triplanarChecked} onChange={onTriplanarChange} name="triplanar" />}
+          label="Triplanar mapping"
+        />
+        </FormGroup>
         {mLayers}
       </CardContent>
     </Card>
@@ -120,6 +135,7 @@ function mapStateToProps(state) {
     material: state.material,
     layer: state.layer,
     randomize: state.randomize,
+    triplanar: state.triplanar,
     minmax: state.minmax,
   };
 };

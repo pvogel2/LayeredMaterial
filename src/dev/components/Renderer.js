@@ -5,8 +5,8 @@ function Renderer(props) {
   const {dispatch } = props;
 
   const TEST01_JPG = '/images/testpattern.jpg';
-  const GRASS01_JPG = '/images/testpattern.jpg';//grass01.jpg';
-  const GRASS02_JPG = '/images/testpattern.jpg';//grass02.jpg';
+  const GRASS01_JPG = '/images/grass01.jpg';
+  const GRASS02_JPG = '/images/grass02.jpg';
   const GRASS1BUMP_PNG = '/images/grass01_bump256.png';
   const GRASS2BUMP_PNG = '/images/grass02_bump256.png';
   const ROCK2BUMP_PNG = '/images/rock02_bump256.png';
@@ -154,16 +154,16 @@ function Renderer(props) {
           slopeTransition: [0, 0],
           map: [textureLoader.load(GRASS01_JPG), textureLoader.load(GRASS02_JPG)],
           bumpMap: [textureLoader.load(GRASS1BUMP_PNG), textureLoader.load(GRASS2BUMP_PNG)],
-          bumpScale: 0,
+          bumpScale: 0.02,
         }),
         new MaterialLayer({
           id: 'rock',
           range:[-2, 10],
           rangeTrns: [0, 0],
           slope:[0, 1],
-          map: [textureLoader.load(ROCK01_JPG), textureLoader.load(ROCK02_JPG)],
+          map: [textureLoader.load(ROCK01_JPG)],//, textureLoader.load(ROCK02_JPG)],
           bumpMap: [textureLoader.load(ROCK2BUMP_PNG)],
-          bumpScale: 0,
+          bumpScale: 0.04,
         }),
         /*new MaterialLayer({
           id: 'test',
