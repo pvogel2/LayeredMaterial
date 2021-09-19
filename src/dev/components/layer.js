@@ -10,11 +10,17 @@ import AccordionDetails from '@material-ui/core/AccordionDetails';
 function Layer(props) {
   const {
     onBoundariesChange = () => {},
+    onChange = () => {},
     layer,
     min = 0,
     max = 100,
+    expandedLayer = '',
     className = '',
   } = props;
+
+  function onAccordionChange(event, expanded) {
+    onChange(layer.id, expanded);
+  }
 
   function handleRangeChange(values) {
     const { id } = { ...layer };
@@ -72,7 +78,7 @@ function Layer(props) {
 
 
   return (
-    <Accordion>
+    <Accordion expanded={expandedLayer === layer.id} onChange={onAccordionChange}>
       <AccordionSummary>
         <Typography variant='h6'>{layer.id}</Typography>
       </AccordionSummary>

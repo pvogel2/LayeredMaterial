@@ -43,6 +43,8 @@ function MaterialSettings(props) {
 
   const [dialogOpen, setDialogOpen] = useState(true);
 
+  const [expandedLayer, setExpandedLayer] = useState('');
+
   const [randomizeChecked, setRandomizeChecked] = useState(randomize);
 
   const [triplanarChecked, setTriplanarChecked] = useState(triplanar);
@@ -57,6 +59,10 @@ function MaterialSettings(props) {
   function onLayerChange(layer) {
     dispatch({ type: 'UPDATE_LAYER', payload: layer });
   }
+
+  const handleChange = (layerId, expanded) => {
+   setExpandedLayer(expanded ? layerId : '');
+  };
 
   function onRandomizeChange(event) {
     const checked = event.target.checked;
@@ -93,6 +99,8 @@ function MaterialSettings(props) {
       min={minmax[0]}
       max= {minmax[1]}
       layer={l}
+      expandedLayer={expandedLayer}
+      onChange={handleChange}
       onBoundariesChange={onLayerChange}
     />
   ).reverse() || '';
