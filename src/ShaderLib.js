@@ -43,12 +43,6 @@ struct TriplanarUV {
   vec2 y; // XZ plane uv coords
   vec2 z; // XY plane uv coords
 };
-
-struct TriplanarColor {
-  vec4 cx; // YZ plane color value
-  vec4 cy; // XZ plane color value
-  vec4 cz; // XY plane color value
-};
 `;
 
 export const TRIPLANAR_PARS_VERTEX = `
@@ -104,7 +98,7 @@ export const TRIPLANAR = `
     );
   }
 
-  TriplanarColor triplanarDFDx(sampler2D map, TriplanarUV tuv) {
+  vec3 triplanarDFDx(sampler2D map, TriplanarUV tuv) {
     vec2 dSTdx_x = dFdx( tuv.x );
     vec2 dSTdx_y = dFdx( tuv.y );
     vec2 dSTdx_z = dFdx( tuv.z );
@@ -113,18 +107,16 @@ export const TRIPLANAR = `
     vec2 ty = (tuv.y + dSTdx_y);
     vec2 tz = (tuv.z + dSTdx_z);
   
-    TriplanarColor trplC;
-
-    trplC.cx = texture2D(map, tx) * triplanarBF.x;
-    trplC.cy = texture2D(map, ty) * triplanarBF.y;
-    trplC.cz = texture2D(map, tz) * triplanarBF.z;
-
-    //return cx + cy + cz;
-    return trplC;
+    // the resulting value only extracted from x merges
+    return vec3(
+      texture2D(map, tx).x * triplanarBF.x,
+      texture2D(map, ty).x * triplanarBF.y,
+      texture2D(map, tz).x * triplanarBF.z
+    );
   }
 
       
-  TriplanarColor triplanarDFDy(sampler2D map, TriplanarUV tuv) {
+  vec3 triplanarDFDy(sampler2D map, TriplanarUV tuv) {
     vec2 dSTdy_x = dFdy( tuv.x );
     vec2 dSTdy_y = dFdy( tuv.y );
     vec2 dSTdy_z = dFdy( tuv.z );
@@ -133,13 +125,12 @@ export const TRIPLANAR = `
     vec2 ty = (tuv.y + dSTdy_y);
     vec2 tz = (tuv.z + dSTdy_z);
   
-    TriplanarColor trplC;
-
-    trplC.cx = texture2D(map, tx) * triplanarBF.x;
-    trplC.cy = texture2D(map, ty) * triplanarBF.y;
-    trplC.cz = texture2D(map, tz) * triplanarBF.z;
-
-    return trplC;
+    // the resulting value only extracted from x merges
+    return vec3(
+      texture2D(map, tx).x * triplanarBF.x,
+      texture2D(map, ty).x * triplanarBF.y,
+      texture2D(map, tz).x * triplanarBF.z
+    );
   }
 
   #ifdef USE_UV_MIX
@@ -319,26 +310,22 @@ export const BUMPMAP_PARS_FRAGMENT = `
     vec2 triplanar_dHdxy_per_texture_fwd(sampler2D tex, float scale) {
       float Hll = scale * triplanar(tex).x;
 
-      TriplanarColor trplDFDX_CentColor = triplanarDFDx(tex, trplUVCent);
-      TriplanarColor trplDFDX_CornColor = triplanarDFDx(tex, trplUVCorn);
+      vec3 trplDFDX_CentColor = triplanarDFDx(tex, trplUVCent);
+      vec3 trplDFDX_CornColor = triplanarDFDx(tex, trplUVCorn);
 
-      TriplanarColor trplDFDY_CentColor = triplanarDFDy(tex, trplUVCent);
-      TriplanarColor trplDFDY_CornColor = triplanarDFDy(tex, trplUVCorn);
+      vec3 trplDFDY_CentColor = triplanarDFDy(tex, trplUVCent);
+      vec3 trplDFDY_CornColor = triplanarDFDy(tex, trplUVCorn);
 
       float trplDBxColor =
-      //vec4 trplDBxColor =
-        mix(trplDFDX_CentColor.cx.x, trplDFDX_CornColor.cx.x, trplMixThreshold.x)
-        + mix(trplDFDX_CentColor.cy.x, trplDFDX_CornColor.cy.x, trplMixThreshold.y)
-        + mix(trplDFDX_CentColor.cz.x, trplDFDX_CornColor.cz.x, trplMixThreshold.z);
+        mix(trplDFDX_CentColor.x, trplDFDX_CornColor.x, trplMixThreshold.x)
+        + mix(trplDFDX_CentColor.y, trplDFDX_CornColor.y, trplMixThreshold.y)
+        + mix(trplDFDX_CentColor.z, trplDFDX_CornColor.z, trplMixThreshold.z);
 
       float trplDByColor =
-      //vec4 trplDByColor =
-        mix(trplDFDY_CentColor.cx.x, trplDFDY_CornColor.cx.x, trplMixThreshold.x)
-        + mix(trplDFDY_CentColor.cy.x, trplDFDY_CornColor.cy.x, trplMixThreshold.y)
-        + mix(trplDFDY_CentColor.cz.x, trplDFDY_CornColor.cz.x, trplMixThreshold.z);
+        mix(trplDFDY_CentColor.x, trplDFDY_CornColor.x, trplMixThreshold.x)
+        + mix(trplDFDY_CentColor.y, trplDFDY_CornColor.y, trplMixThreshold.y)
+        + mix(trplDFDY_CentColor.z, trplDFDY_CornColor.z, trplMixThreshold.z);
 
-      //float dBx = scale * trplDBxColor.x - Hll;
-      //float dBy = scale * trplDByColor.x - Hll;
       float dBx = scale * trplDBxColor - Hll;
       float dBy = scale * trplDByColor - Hll;
   
@@ -382,10 +369,10 @@ export const BUMPMAP_PARS_FRAGMENT = `
   #else
     vec2 triplanar_dHdxy_per_texture_fwd(sampler2D tex, float scale) {
       float Hll = scale * triplanar(tex, trplUV).x;
-      TriplanarColor cDFDx = triplanarDFDx(tex, trplUV);
-      TriplanarColor cDFDy = triplanarDFDy(tex, trplUV);
-      float dBx = scale * (cDFDx.cx.x + cDFDx.cy.x + cDFDx.cz.x) - Hll;
-      float dBy = scale * (cDFDy.cx.x + cDFDy.cy.x + cDFDy.cz.x) - Hll;
+      vec3 cDFDx = triplanarDFDx(tex, trplUV);
+      vec3 cDFDy = triplanarDFDy(tex, trplUV);
+      float dBx = scale * (cDFDx.x + cDFDx.y + cDFDx.z) - Hll;
+      float dBy = scale * (cDFDy.x + cDFDy.y + cDFDy.z) - Hll;
   
       return vec2( dBx, dBy );
     }
