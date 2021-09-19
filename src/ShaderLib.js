@@ -46,7 +46,7 @@ struct TriplanarUV {
 `;
 
 export const TRIPLANAR_PARS_VERTEX = `
-varying vec3 triplanarNormal;
+varying vec3 trplNormal;
 varying TriplanarUV trplUV;
 `;
 
@@ -54,7 +54,7 @@ varying TriplanarUV trplUV;
  * define all needed global fragment variables here (in header)
  */
 export const TRIPLANAR_PARS_FRAGMENT = `
-  varying vec3 triplanarNormal;
+  varying vec3 trplNormal;
   varying TriplanarUV trplUV;
  
   TriplanarUV trplUVCorn;
@@ -63,8 +63,9 @@ export const TRIPLANAR_PARS_FRAGMENT = `
   TriplanarUV trplUVFloor;
   TriplanarUV trplUVFract;
 
-  vec3 triplanarBF;
+  vec3 trplBF;
   vec3 trplMixThreshold;
+  vec3 trplMixAmount;
  `;
 
  export const TRIPLANAR_FRAGMENT_BEGIN = `
@@ -76,15 +77,22 @@ export const TRIPLANAR_PARS_FRAGMENT = `
  trplUVFract.y = fract(trplUV.y);
  trplUVFract.z = fract(trplUV.z);
  
- triplanarBF = normalize( abs( triplanarNormal ) );
- triplanarBF /= dot( triplanarBF, vec3( 1. ) );
+ trplBF = triplanarBF();
  
  trplMixThreshold = triplanarUVThreshold();
+
+ trplMixAmount = triplanarMixAmount();
  `;
  
 export const TRIPLANAR = `
 #if !defined MWM_TRIPLANAR
   #define MWM_TRIPLANAR
+
+  vec3 triplanarBF() {
+    vec3 bf = normalize( abs( trplNormal ) );
+    bf /= dot( bf, vec3( 1. ) );
+    return bf;
+  }
 
   vec3 triplanarUVThreshold() {
     vec2 centDist_x = trplUVFract.x - vec2(0.5);
@@ -95,6 +103,19 @@ export const TRIPLANAR = `
       smoothstep(1. - .4, 1.,  dot(centDist_x, centDist_x) * 4.0),
       smoothstep(1. - .4, 1.,  dot(centDist_y, centDist_y) * 4.0),
       smoothstep(1. - .4, 1.,  dot(centDist_z, centDist_z) * 4.0)
+    );
+  }
+
+  vec3 triplanarMixAmount() {
+    vec3 trplNoiseUV = vec3(
+      noise(trplUV.x),
+      noise(trplUV.y),
+      noise(trplUV.z)
+    );
+    return vec3(
+      (0., .6, trplNoiseUV.x * fbm(trplUV.x * 3.)) + 0.2 * smoothstep(0., 1., trplNoiseUV.x * fbm(trplUV.x * 40.)),
+      (0., .6, trplNoiseUV.y * fbm(trplUV.y * 3.)) + 0.2 * smoothstep(0., 1., trplNoiseUV.y * fbm(trplUV.y * 40.)),
+      (0., .6, trplNoiseUV.z * fbm(trplUV.z * 3.)) + 0.2 * smoothstep(0., 1., trplNoiseUV.z * fbm(trplUV.z * 40.))
     );
   }
 
@@ -109,9 +130,9 @@ export const TRIPLANAR = `
   
     // the resulting value only extracted from x merges
     return vec3(
-      texture2D(map, tx).x * triplanarBF.x,
-      texture2D(map, ty).x * triplanarBF.y,
-      texture2D(map, tz).x * triplanarBF.z
+      texture2D(map, tx).x * trplBF.x,
+      texture2D(map, ty).x * trplBF.y,
+      texture2D(map, tz).x * trplBF.z
     );
   }
 
@@ -127,9 +148,9 @@ export const TRIPLANAR = `
   
     // the resulting value only extracted from x merges
     return vec3(
-      texture2D(map, tx).x * triplanarBF.x,
-      texture2D(map, ty).x * triplanarBF.y,
-      texture2D(map, tz).x * triplanarBF.z
+      texture2D(map, tx).x * trplBF.x,
+      texture2D(map, ty).x * trplBF.y,
+      texture2D(map, tz).x * trplBF.z
     );
   }
 
@@ -147,25 +168,51 @@ export const TRIPLANAR = `
     }
 
     vec4 triplanar(sampler2D map) {
-    	vec4 cx = mix(texture2D(map, trplUVCent.x), texture2D(map, trplUVCorn.x), trplMixThreshold.x) * triplanarBF.x;
-    	vec4 cy = mix(texture2D(map, trplUVCent.y), texture2D(map, trplUVCorn.y), trplMixThreshold.y) * triplanarBF.y;
-    	vec4 cz = mix(texture2D(map, trplUVCent.z), texture2D(map, trplUVCorn.z), trplMixThreshold.z) * triplanarBF.z;
+    	vec4 cx = mix(texture2D(map, trplUVCent.x), texture2D(map, trplUVCorn.x), trplMixThreshold.x) * trplBF.x;
+    	vec4 cy = mix(texture2D(map, trplUVCent.y), texture2D(map, trplUVCorn.y), trplMixThreshold.y) * trplBF.y;
+    	vec4 cz = mix(texture2D(map, trplUVCent.z), texture2D(map, trplUVCorn.z), trplMixThreshold.z) * trplBF.z;
+
+      return cx + cy + cz;
+    }
+
+    vec4 triplanar(sampler2D map1, sampler2D map2) {
+    	vec4 cx1 = mix(texture2D(map1, trplUVCent.x), texture2D(map1, trplUVCorn.x), trplMixThreshold.x) * trplBF.x;
+    	vec4 cy1 = mix(texture2D(map1, trplUVCent.y), texture2D(map1, trplUVCorn.y), trplMixThreshold.y) * trplBF.y;
+    	vec4 cz1 = mix(texture2D(map1, trplUVCent.z), texture2D(map1, trplUVCorn.z), trplMixThreshold.z) * trplBF.z;
+
+      vec4 cx2 = mix(texture2D(map2, trplUVCent.x), texture2D(map2, trplUVCorn.x), trplMixThreshold.x) * trplBF.x;
+    	vec4 cy2 = mix(texture2D(map2, trplUVCent.y), texture2D(map2, trplUVCorn.y), trplMixThreshold.y) * trplBF.y;
+    	vec4 cz2 = mix(texture2D(map2, trplUVCent.z), texture2D(map2, trplUVCorn.z), trplMixThreshold.z) * trplBF.z;
+
+      vec4 cx = mix(cx1, cx2, trplMixAmount.x);
+      vec4 cy = mix(cy1, cy2, trplMixAmount.y);
+      vec4 cz = mix(cz1, cz2, trplMixAmount.z);
 
       return cx + cy + cz;
     }
   #else
     vec4 triplanar(sampler2D map, TriplanarUV tuv) {
-      // Triplanar mapping
-    	vec2 tx = tuv.x;
-    	vec2 ty = tuv.y;
-    	vec2 tz = tuv.z;
-    
-      // Base color
-    	vec4 cx = texture2D(map, tx) * triplanarBF.x;
-    	vec4 cy = texture2D(map, ty) * triplanarBF.y;
-    	vec4 cz = texture2D(map, tz) * triplanarBF.z;
+    	vec4 cx = texture2D(map, tuv.x) * trplBF.x;
+    	vec4 cy = texture2D(map, tuv.y) * trplBF.y;
+    	vec4 cz = texture2D(map, tuv.z) * trplBF.z;
     
     	return cx + cy + cz;
+    }
+
+    vec4 triplanar(sampler2D map1, sampler2D map2, TriplanarUV tuv) {
+      vec4 cx1 = texture2D(map1, tuv.x) * trplBF.x;
+    	vec4 cy1 = texture2D(map1, tuv.y) * trplBF.y;
+    	vec4 cz1 = texture2D(map1, tuv.z) * trplBF.z;
+
+      vec4 cx2 = texture2D(map2, tuv.x) * trplBF.x;
+    	vec4 cy2 = texture2D(map2, tuv.y) * trplBF.y;
+    	vec4 cz2 = texture2D(map2, tuv.z) * trplBF.z;
+
+      vec4 cx = mix(cx1, cx2, trplMixAmount.x);
+      vec4 cy = mix(cy1, cy2, trplMixAmount.y);
+      vec4 cz = mix(cz1, cz2, trplMixAmount.z);
+
+      return cx + cy + cz;
     }
   #endif
 #endif
@@ -357,14 +404,14 @@ export const BUMPMAP_PARS_FRAGMENT = `
 
     vec4 randomizeTileTextures(sampler2D tex1, sampler2D tex2) {
       #ifdef USE_TRIPLANAR
-        vec3 color1 = triplanar(tex1).rgb;
-        vec3 color2 = triplanar(tex2).rgb;
+        return vec4(triplanar(tex1, tex2).rgb, 1.);
       #else
         vec3 color1 = mix(texture2D(tex1 , vUvCent).rgb, texture2D(tex1 , vUvCorn).rgb, vUvMixThreshold);
         vec3 color2 = mix(texture2D(tex2 , vUvCent).rgb, texture2D(tex2 , vUvCorn).rgb, vUvMixThreshold);
+        return vec4(mix(color1, color2, vUvMixAmount), 1.);
       #endif
 
-      return vec4(mix(color1, color2, vUvMixAmount), 1.);
+      
     }
   #else
     vec2 triplanar_dHdxy_per_texture_fwd(sampler2D tex, float scale) {
@@ -398,14 +445,12 @@ export const BUMPMAP_PARS_FRAGMENT = `
   
     vec4 randomizeTileTextures(sampler2D tex1, sampler2D tex2) {
       #ifdef USE_TRIPLANAR
-        vec3 color1 = triplanar(tex1, trplUV).rgb;
-        vec3 color2 = triplanar(tex2, trplUV).rgb;
+        return vec4(triplanar(tex1, tex2, trplUV).rgb, 1.);
       #else
         vec3 color1 = texture2D(tex1 , vUv).rgb;
         vec3 color2 = texture2D(tex2 , vUv).rgb;
+        return vec4(mix(color1, color2, vUvMixAmount), 1.);
       #endif
-  
-      return vec4(mix(color1, color2, vUvMixAmount), 1.);
     }
   #endif
 
