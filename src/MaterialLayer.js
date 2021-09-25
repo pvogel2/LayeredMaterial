@@ -20,7 +20,7 @@ export default class MaterialLayer {
     this.slope = config.slope || [0, 1];
     this.slopeDstrbStrength = config.slopeDstrbStrength || [0, 0];
     this.slopeDstrbOctaves = config.slopeDstrbOctaves || [0, 0];
-    this.slopeTrns = config.rangeTrns || [0, 0];
+    this.slopeTrns = config.slopeTrns || [0, 0];
 
     this.useRangeDisturb = false;
     this.useSlopeDisturb = true;

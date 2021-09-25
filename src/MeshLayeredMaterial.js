@@ -67,7 +67,8 @@ void main() {
   height = dot(lyrDirection, position);
   slope = 1. - 0.99 * dot(lyrDirection, normalize(normal));
 
-  vUv = position.zx; // switched direction from xz to zx
+  // still a workaround to get the correct slope disturbance direction
+  vUv = lyrDirection.x * position.zy + lyrDirection.y * position.zx + lyrDirection.z * position.xy; // switched direction from xz to zx
   trplNormal = normal;
 
   trplUV.x = position.zy; // switched direction from yz to zy
