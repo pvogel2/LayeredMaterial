@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 
-import Slider from '@material-ui/core/Slider';
-import Typography from '@material-ui/core/Typography';
+import { Slider, Typography } from '@mui/material';
 
 function Slope(props) {
   const {

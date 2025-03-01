@@ -7,7 +7,7 @@ import SceneSettings from './SceneSettings';
 import reducer from '../store/reducer';
 
 const store = createStore(reducer);
-
+console.log(store);
 function App() {
   return (
     <div className="App">

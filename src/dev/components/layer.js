@@ -2,10 +2,7 @@ import React from 'react';
 
 import Range from './range';
 import Slope from './slope';
-import Typography from '@material-ui/core/Typography';
-import Accordion from '@material-ui/core/Accordion';
-import AccordionSummary from '@material-ui/core/AccordionSummary';
-import AccordionDetails from '@material-ui/core/AccordionDetails';
+import { Typography, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 
 function Layer(props) {
   const {

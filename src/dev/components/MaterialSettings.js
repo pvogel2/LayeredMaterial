@@ -1,40 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 
-import Card from '@material-ui/core/Card';
-import CardContent from '@material-ui/core/CardContent';
-import CardHeader from '@material-ui/core/CardHeader';
-import Avatar from '@material-ui/core/Avatar';
-import IconButton from '@material-ui/core/IconButton';
-import CloseIcon from '@material-ui/icons/Close';
-import Switch from '@material-ui/core/Switch';
-import FormGroup from '@material-ui/core/FormGroup';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
+import { Card, CardContent, CardHeader, Avatar, IconButton, Switch, FormGroup, FormControlLabel } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 
 import Layer from './layer.js';
+import { styled } from '@mui/material/styles';
 
-import { makeStyles } from '@material-ui/core/styles';
+const StyledCard = styled(Card)({
+  minWidth: '275px',
+  position: 'absolute',
+  top: '30px',
+  right: '30px',
+  zIndex: '1',
+});
 
-const useStyles = makeStyles((theme) => ({
-  card: {
-    minWidth: 275,
-    position: 'absolute',
-    top: '30px',
-    left: '30px',
-    zIndex: 1,
-  },
-  layer: {
-    textTransform: 'capitalize',
-    width: '100%',
-    margin: 8
-  },
-  avatar: {
-    backgroundColor: theme.palette.secondary.main,
-  },
-  root: {
-    margin: '0 8px',
-  }
+const StyledLayer = styled(Layer)({
+  textTransform: 'capitalize',
+  width: '100%',
+  margin: '8px',
+});
+
+const StyledAvatar = styled(Avatar)(({theme}) => ({
+  backgroundColor: theme.palette.secondary.main,
 }));
+
+const StyledContent = styled(CardContent)({
+  margin: '0 8px',
+});
 
 let toggleDialog = false;
 
@@ -87,14 +80,10 @@ function MaterialSettings(props) {
     return () => document.removeEventListener('keydown', handleKeyDown, false);
   }, []);
 
-  const classes = useStyles();
-
   if (!dialogOpen) return null;
 
-  // const mLayers = material ? material.layers.map(l =>
   const mLayers = material && material.layers?.map(l => 
-    <Layer
-      className={classes.layer}
+    <StyledLayer
       key={l.id}
       min={minmax[0]}
       max= {minmax[1]}
@@ -106,12 +95,12 @@ function MaterialSettings(props) {
   ).reverse() || '';
 
   return (
-    <Card className={classes.card}>
+    <StyledCard>
       <CardHeader
         avatar={
-          <Avatar aria-label="recipe" className={classes.avatar}>
+          <StyledAvatar aria-label="recipe">
             M
-          </Avatar>
+          </StyledAvatar>
         }
         action={
           <IconButton aria-label="Close" onClick={onClose}>
@@ -121,7 +110,7 @@ function MaterialSettings(props) {
         title="Material settings"
         subheader="Changes applied on the fly"
       />
-      <CardContent className={classes.root}>
+      <StyledContent>
         <FormGroup>
         <FormControlLabel
           control={<Switch checked={randomizeChecked} onChange={onRandomizeChange} name="randomization" />}
@@ -133,8 +122,8 @@ function MaterialSettings(props) {
         />
         </FormGroup>
         {mLayers}
-      </CardContent>
-    </Card>
+      </StyledContent>
+    </StyledCard>
   );
 };
 

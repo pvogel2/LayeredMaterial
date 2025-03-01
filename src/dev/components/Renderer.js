@@ -1,5 +1,10 @@
 import React, { useEffect } from 'react';
 import { connect } from 'react-redux';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'three';
+import MaterialLayer from '../../MaterialLayer';
+import MeshLayeredMaterial from '../../MeshLayeredMaterial';
+
 
 function Renderer(props) {
   const {dispatch } = props;
@@ -178,8 +183,8 @@ function Renderer(props) {
         }),*/
       ];
 
-      // return new THREE.MeshStandardMaterial();
-      return new MeshLayeredMaterial({ layers, side: THREE.DoubleSide, wireframe: false, bumpScale: 1 });
+      return new THREE.MeshStandardMaterial();
+      // return new MeshLayeredMaterial({ layers, side: THREE.DoubleSide, wireframe: false, bumpScale: 1 });
     }
     
     async function createTestMeshes(scene) {
@@ -233,14 +238,15 @@ function Renderer(props) {
       dispatch({ type: 'SET_MATERIAL', payload: material });
     }
 
-    useEffect(async () => { 
+    useEffect(() => {
+      async function createScene() {
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
         
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize( window.innerWidth, window.innerHeight );
         
-        const controls = new THREE.OrbitControls( camera, renderer.domElement );
+        const controls = new OrbitControls( camera, renderer.domElement );
         
         document.body.appendChild( renderer.domElement );
 
@@ -274,6 +280,8 @@ function Renderer(props) {
           renderer.render( scene, camera );
         };
         animate();
+      };
+      createScene();
     }, []);
         
     return (

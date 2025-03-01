@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+// import * as THREE from 'three';
 
 import {
   BUMPMAP_PARS_FRAGMENT,
@@ -76,10 +76,15 @@ void main() {
   trplUV.z = position.xy;
 }
 `;
+let THREE;
 
-class MeshLayeredMaterial extends THREE.ShaderMaterial {
+class MeshLayeredMaterial /* extends THREE.ShaderMaterial*/ {
   constructor(parameters) {
-    super();
+    //super();
+    // console.log(this);
+    const root = this;
+    THREE = root.THREE; //  || (require && (typeof require === 'function' && require('three')));
+    console.log('>>>', THREE);
     this.type = 'MeshLayeredMaterial';
   
     this.color = new THREE.Color( 0xffffff ); // diffuse

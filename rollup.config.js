@@ -15,18 +15,23 @@ const serveConfig = {
 };
 
 const plugins = [
-  nodeResolve(), // so Rollup can find `ms`
-  replace({
-    preventAssignment: true,
-    values: {
-      'process.env.NODE_ENV': JSON.stringify('production'),
-    }
+  nodeResolve({
+     extensions: ['.js', '.jsx']
   }),
-  commonjs(), // so Rollup can convert `ms` to an ES module
+  babel({
+     babelHelpers: 'bundled',
+     presets: ['@babel/preset-react'],
+     extensions: ['.js', '.jsx']
+  }),
+  commonjs(),
+  replace({
+     preventAssignment: false,
+     'process.env.NODE_ENV': '"development"'
+  })
 ];
 
 export default [
-  {
+  /*{
     external: ['three'],
     input: 'src/MeshLayeredMaterial.js',
     plugins,
@@ -71,33 +76,28 @@ export default [
       format: 'es',
       name: 'MaterialLayer',
     }
-  },
+  },*/
   {
-    external: ['react', 'react-dom'],
     input: 'src/dev/index.js',
-    plugins: [
-      nodeResolve(), // so Rollup can find `ms`
-      replace({
-        preventAssignment: true,
-        values: {
-          'process.env.NODE_ENV': JSON.stringify('production'),
-        }
-      }),
-      babel({
-        presets: ["@babel/preset-react"],
-        babelHelpers: 'bundled',
-      }),
-      commonjs(), // so Rollup can convert `ms` to an ES module
+    // external: ['three'],
+    plugins: [...plugins, // so Rollup can convert `ms` to an ES module
       serve(serveConfig),
       livereload(),
     ],
     output: {
       file: 'build/index.js',
       format: 'iife',
-      globals: {
+      /* globals: {
+        three: 'THREE',
         react: 'React',
         'react-dom': 'ReactDOM',
-      },
+      //  material: 'material',
+      },*/
     },
+    // @see https://github.com/rollup/rollup/issues/4699
+    onwarn: function ( message ) {
+      if ( message.code === 'MODULE_LEVEL_DIRECTIVE') return;
+      console.warn( message );
+    }
   },
 ];
