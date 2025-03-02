@@ -183,8 +183,8 @@ function Renderer(props) {
         }),*/
       ];
 
-      return new THREE.MeshStandardMaterial();
-      // return new MeshLayeredMaterial({ layers, side: THREE.DoubleSide, wireframe: false, bumpScale: 1 });
+      // return new THREE.MeshStandardMaterial();
+      return new MeshLayeredMaterial({ layers, side: THREE.DoubleSide, wireframe: false, bumpScale: 1 });
     }
     
     async function createTestMeshes(scene) {
@@ -267,7 +267,7 @@ function Renderer(props) {
 
         await createTestMeshes(scene);
 
-        dispatch({ type: 'ADD_MESH', payload: 'landscape' });
+        dispatch({ type: 'ADD_MESH', payload: 'plane' });
 
         camera.position.z = 5;
         controls.update();

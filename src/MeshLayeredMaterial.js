@@ -1,4 +1,4 @@
-// import * as THREE from 'three';
+import * as THREE from 'three';
 
 import {
   BUMPMAP_PARS_FRAGMENT,
@@ -12,12 +12,15 @@ import {
   NORMAL_FRAGMENT_MAPS,
 } from './ShaderLib';
 
+
 const VERTEX_SHADER = `
 // currently based on PHONG
 #define LAYERED
 
 #define USE_UV
 #define USE_BUMPMAP
+
+#define BUMPMAP_UV uv
 
 // from LayeredMaterial
 uniform vec3 lyrDirection;
@@ -29,7 +32,7 @@ varying vec3 vViewPosition;
 ${TRIPLANAR_COMMON}
 
 #include <uv_pars_vertex>
-#include <uv2_pars_vertex>
+// #include <uv2_pars_vertex>
 #include <color_pars_vertex>
 #include <normal_pars_vertex>
 #include <shadowmap_pars_vertex>
@@ -42,7 +45,7 @@ ${TRIPLANAR_PARS_VERTEX}
 
 void main() {
   #include <uv_vertex>
-	#include <uv2_vertex>
+	// #include <uv2_vertex>
 	#include <color_vertex>
 
   #include <beginnormal_vertex>
@@ -76,15 +79,10 @@ void main() {
   trplUV.z = position.xy;
 }
 `;
-let THREE;
 
-class MeshLayeredMaterial /* extends THREE.ShaderMaterial*/ {
+class MeshLayeredMaterial extends THREE.ShaderMaterial {
   constructor(parameters) {
-    //super();
-    // console.log(this);
-    const root = this;
-    THREE = root.THREE; //  || (require && (typeof require === 'function' && require('three')));
-    console.log('>>>', THREE);
+    super();
     this.type = 'MeshLayeredMaterial';
   
     this.color = new THREE.Color( 0xffffff ); // diffuse
@@ -139,7 +137,6 @@ class MeshLayeredMaterial /* extends THREE.ShaderMaterial*/ {
   this.fragmentShader = this.getFragmentShader();
 
   this.setValues( parameters );
-  // console.log(this.fragmentShader);
 }
 
 /**
@@ -289,7 +286,7 @@ getFragmentShader() {
 
     ${UV_MIX_PARS_FRAGMENT}
 
-    #include <uv2_pars_fragment>
+    // #include <uv2_pars_fragment>
     #include <map_pars_fragment>
     #include <alphamap_pars_fragment>
     #include <aomap_pars_fragment>
@@ -365,7 +362,7 @@ getFragmentShader() {
     
       gl_FragColor = vec4( outgoingLight, diffuseColor.a ) * ${layerDiffuseMixes};
 
-      #include <encodings_fragment>
+      // #include <encodings_fragment>
       #include <premultiplied_alpha_fragment>
       #include <dithering_fragment>
     }

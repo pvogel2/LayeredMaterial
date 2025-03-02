@@ -11,7 +11,7 @@ const StyledCard = styled(Card)({
   minWidth: '275px',
   position: 'absolute',
   top: '30px',
-  right: '30px',
+  left: '30px',
   zIndex: '1',
 });
 
