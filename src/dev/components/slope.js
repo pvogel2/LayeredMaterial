@@ -92,6 +92,9 @@ function Slope(props) {
     <Typography gutterBottom>
       slope
     </Typography>
+    <Typography variant="caption">
+      extend
+    </Typography>
     <Slider
       min={min}
       max={max}
@@ -104,6 +107,9 @@ function Slope(props) {
       marks={marks}
       step={0.05}
     />
+    <Typography variant="caption">
+      transition
+    </Typography>
     <Slider
       min={-1*max}
       max={max}

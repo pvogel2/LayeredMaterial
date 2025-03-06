@@ -81,6 +81,10 @@ export default class MaterialLayer {
     return `lyr_slp_trns_${this.id}`;
   }
 
+  get diffuseColorName() {
+    return `lyr_dff_clr_${this.id}`;
+  }
+
   get map0Name() {
     return this.getTextureName('mp', 0);
   }
@@ -100,11 +104,50 @@ export default class MaterialLayer {
   get hsModul() {
     return `1. ${(this.range ? `* ${this.heightName}` : '')} ${this.slope ? `* ${this.slopeName}` : ''}`;
   }
-  
+
+  get heightModule() {
+    if (!this.range) {
+      return '1.';
+    }
+    return this.heightName;
+  }
+
   getTextureName(base, idx) {
     return `lyr_${base}${idx}${this.id}`;
   }
- 
+
+  mixinFragmentDiffuse(diffuseMixes) {
+    return `mix(${diffuseMixes}, ${this.diffuseColorName}, ${this.heightModule})`;
+  }
+
+  addFragmentHeight(heightName) {
+    if (!this.range) {
+      return '';
+    }
+    return `float ${this.heightName} = smoothstep(${this.rangeName}.x - ${this.rangeTrnsName}.x,${this.rangeName}.x, ${heightName}) * (1. -smoothstep(${this.rangeName}.y, ${this.rangeName}.y + ${this.rangeTrnsName}.y, ${heightName}))\n;`;
+  }
+
+  addFragmentDiffuseColor(uvName) {
+    return `vec4 ${this.diffuseColorName} = texture2D(${this.map0Name}, ${uvName});\n`;
+  }
+
+  addFragmentUniforms() {
+    let uniforms = `// mixin layer ${this.id} uniforms\n`;
+    if (this.useDiffuse) {
+      // write out diffuse color map texture
+      uniforms += `uniform sampler2D ${this.map0Name};\n`;
+
+      if (this.range) {
+        uniforms += `uniform vec2 ${this.rangeName};\n`;
+        // uniforms += `uniform vec2 ${l.rangeDisturbStrengthName};\n`;
+        // uniforms += `uniform vec2 ${l.rangeDisturbOctavesName};\n`;
+        uniforms += `uniform vec2 ${this.rangeTrnsName};\n`;
+      }
+    }
+    uniforms += `\n`;
+    return uniforms;
+  }
+
   extendUniforms(u) {
     if (this.range) {
       u[this.rangeName] = { type: 'vec2', value: new THREE.Vector2(this.range[0], this.range[1]) };

@@ -4,6 +4,7 @@ const initialState = {
   randomize: true,
   triplanar: true,
   minmax: [-5, 5],
+  mesh: '',
 }
 
 function updateObject(oldObject, newValues) {

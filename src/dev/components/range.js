@@ -58,7 +58,10 @@ function Range(props) {
   return (
     <>
     <Typography gutterBottom>
-    range
+      range
+    </Typography>
+    <Typography variant="caption">
+      extend
     </Typography>
     <Slider
       min={min}
@@ -71,6 +74,9 @@ function Range(props) {
       marks={marks(min, max)}
       step={0.1}
     />
+    <Typography variant="caption">
+      transition
+    </Typography>
     <Slider
       min={minTrns}
       max={maxTrns}

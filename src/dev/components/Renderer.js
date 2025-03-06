@@ -4,6 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as THREE from 'three';
 import MaterialLayer from '../../MaterialLayer';
 import MeshLayeredMaterial from '../../MeshLayeredMaterial';
+import MeshLayeredMaterial2 from '../../MeshLayeredMaterial2';
 
 
 function Renderer(props) {
@@ -129,8 +130,8 @@ function Renderer(props) {
     }
 
     function createBoxGeometry() {
-      const size = 10;
-      const geometry  = new THREE.BoxGeometry( 5, 5, 5, 5, 5, 5 );
+      const size = 5;
+      const geometry  = new THREE.BoxGeometry( size, size, size, size, size, size );
   
       /* const uv = [];
   
@@ -157,8 +158,10 @@ function Renderer(props) {
           rangeTrns: [0, 0],
           slope:[0, 1],
           slopeTransition: [0, 0],
-          map: [textureLoader.load(GRASS01_JPG), textureLoader.load(GRASS02_JPG)],
-          bumpMap: [textureLoader.load(GRASS1BUMP_PNG), textureLoader.load(GRASS2BUMP_PNG)],
+          // map: [textureLoader.load(GRASS01_JPG), textureLoader.load(GRASS02_JPG)],
+          // bumpMap: [textureLoader.load(GRASS1BUMP_PNG), textureLoader.load(GRASS2BUMP_PNG)],
+          map: [textureLoader.load(GRASS01_JPG)],
+          bumpMap: [textureLoader.load(GRASS1BUMP_PNG)],
           bumpScale: 0.02,
         }),
         new MaterialLayer({
@@ -183,8 +186,9 @@ function Renderer(props) {
         }),*/
       ];
 
-      // return new THREE.MeshStandardMaterial();
-      return new MeshLayeredMaterial({ layers, side: THREE.DoubleSide, wireframe: false, bumpScale: 1 });
+      // return new THREE.MeshStandardMaterial({ side: THREE.DoubleSide });
+      // return new MeshLayeredMaterial({ layers, side: THREE.DoubleSide, wireframe: false, bumpScale: 1 });
+      return new MeshLayeredMaterial2({ layers, side: THREE.DoubleSide, wireframe: false });
     }
     
     async function createTestMeshes(scene) {
@@ -228,7 +232,7 @@ function Renderer(props) {
       sunLight.position.set(-10, 10, 10);
       const sunHelper = new THREE.DirectionalLightHelper( sunLight, 3 );
 
-      const ambientLight = new THREE.AmbientLight( 0x090909 );
+      const ambientLight = new THREE.AmbientLight( 0x595959 );
       dispatch({ type: 'SET_MESHES', payload: [landscapeMesh, sphereMesh, boxMesh, planeMesh] });
 
       scene.add( ambientLight );
