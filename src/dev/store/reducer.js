@@ -38,6 +38,10 @@ export default combineReducers({
 }); */
   switch (action.type) {
     case 'SET_MATERIAL': {
+      const m = action.payload;
+      state.meshes.forEach((o) => {
+          o.material = m;
+      });
       return updateObject(state, { material: action.payload });
     }
 

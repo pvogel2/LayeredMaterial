@@ -68,7 +68,7 @@ function Renderer(props) {
         for (let h = 0; h < height; h++) {
           for (let w = 0; w < width; w++) {
             const idx = h * width + w;
-            // uvs.push(w / width * 50, 1 - h / height * 50);
+            uvs.push(w / width * 50, 1 - h / height * 50);
             position.push((w - 0.5 * width) * scale * 0.1, (data[idx] - offset - 10) * scale, (h - 0.5 * height) * scale * 0.1);
             if (w < width - 1 && h < height - 1) {
               indices.push(idx, idx + width, idx + 1);
@@ -79,7 +79,7 @@ function Renderer(props) {
         const geo  = new THREE.BufferGeometry();
         geo.setIndex( indices );
         geo.setAttribute( 'position', new THREE.Float32BufferAttribute( position, 3 ) );
-        // geo.setAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
+        geo.setAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
         geo.computeVertexNormals();
         resolve({
           geometry: geo,

@@ -32,7 +32,6 @@ varying vec3 vViewPosition;
 ${TRIPLANAR_COMMON}
 
 #include <uv_pars_vertex>
-// #include <uv2_pars_vertex>
 #include <color_pars_vertex>
 #include <normal_pars_vertex>
 #include <shadowmap_pars_vertex>
@@ -45,7 +44,6 @@ ${TRIPLANAR_PARS_VERTEX}
 
 void main() {
   #include <uv_vertex>
-	// #include <uv2_vertex>
 	#include <color_vertex>
 
   #include <beginnormal_vertex>
@@ -135,6 +133,12 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
   this.uniformsNeedUpdate = true;
 
   this.fragmentShader = this.getFragmentShader();
+
+  console.log('--------------------------------------');
+  console.log(this.vertexShader);
+  console.log('--------------------------------------');
+  console.log(this.fragmentShader);
+  console.log('--------------------------------------');
 
   this.setValues( parameters );
 }
@@ -286,7 +290,6 @@ getFragmentShader() {
 
     ${UV_MIX_PARS_FRAGMENT}
 
-    // #include <uv2_pars_fragment>
     #include <map_pars_fragment>
     #include <alphamap_pars_fragment>
     #include <aomap_pars_fragment>
@@ -295,7 +298,7 @@ getFragmentShader() {
     #include <bsdfs>
 
     #include <lights_pars_begin>
-    #include <normal_pars_fragment>
+    #include <normal_pars_fragment> // defines vNormal
     #include <lights_phong_pars_fragment>
     #include <shadowmap_pars_fragment>
 

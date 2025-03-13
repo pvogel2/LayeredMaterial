@@ -128,7 +128,7 @@ export default class MaterialLayer {
   }
 
   addFragmentDiffuseColor(uvName) {
-    return `vec4 ${this.diffuseColorName} = texture2D(${this.map0Name}, ${uvName});\n`;
+    return `vec4 ${this.diffuseColorName} = getTexture2D(${this.map0Name});\n`;
   }
 
   addFragmentUniforms() {

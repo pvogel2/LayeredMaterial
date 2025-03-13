@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { MeshStandardMaterial, DoubleSide } from 'three';
 import { connect } from 'react-redux';
 
 import { Card, CardContent, CardHeader, Avatar, IconButton, Switch, FormGroup, FormControlLabel } from '@mui/material';
@@ -31,8 +32,9 @@ const StyledContent = styled(CardContent)({
 
 let toggleDialog = false;
 
+const testMaterial = new  MeshStandardMaterial({ side: DoubleSide });
 function MaterialSettings(props) {
-  const { minmax, randomize, triplanar, layer, material, dispatch } = props;
+  const { minmax, randomize, triplanar, material, dispatch } = props;
 
   const [dialogOpen, setDialogOpen] = useState(true);
 
@@ -41,6 +43,10 @@ function MaterialSettings(props) {
   const [randomizeChecked, setRandomizeChecked] = useState(randomize);
 
   const [triplanarChecked, setTriplanarChecked] = useState(triplanar);
+
+  const [testMaterialChecked, setTestMaterialChecked] = useState(false);
+
+  const [layeredMaterial, setLayeredMaterial] = useState(null);
 
   function handleKeyDown(e) {
     if (e.key !== 'm') return;
@@ -67,6 +73,22 @@ function MaterialSettings(props) {
     const checked = event.target.checked;
     dispatch({ type: 'TRIPLANAR', payload: checked });
     setTriplanarChecked(checked);
+  }
+
+  function onTestMaterialChange(event) {
+    const checked = event.target.checked;
+
+    if (!layeredMaterial && material && !material.type.startsWith('MeshLayeredMaterial')) {
+      console.log('invalid state found.');
+      return;
+    }
+
+    if (checked && material.type.startsWith('MeshLayeredMaterial')) {
+      console.log(material);
+      setLayeredMaterial(material);
+    }
+    dispatch({ type: 'SET_MATERIAL', payload: checked ? testMaterial : layeredMaterial });
+    setTestMaterialChecked(checked);
   }
 
   function onClose() {
@@ -113,12 +135,16 @@ function MaterialSettings(props) {
       <StyledContent>
         <FormGroup>
         <FormControlLabel
-          control={<Switch checked={randomizeChecked} onChange={onRandomizeChange} name="randomization" />}
+          control={<Switch disabled={testMaterialChecked} checked={randomizeChecked} onChange={onRandomizeChange} name="randomization" />}
           label="Tile randomization"
         />
         <FormControlLabel
-          control={<Switch checked={triplanarChecked} onChange={onTriplanarChange} name="triplanar" />}
+          control={<Switch disabled={testMaterialChecked} checked={triplanarChecked} onChange={onTriplanarChange} name="triplanar" />}
           label="Triplanar mapping"
+        />
+        <FormControlLabel
+          control={<Switch checked={testMaterialChecked} onChange={onTestMaterialChange} name="testmat" />}
+          label="Apply test material"
         />
         </FormGroup>
         {mLayers}

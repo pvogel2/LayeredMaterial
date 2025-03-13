@@ -1,5 +1,13 @@
 import * as THREE from 'three';
 
+import {
+  triplanar_common_pars,
+  triplanar_pars_vertex,
+  triplanar_pars_fragment,
+  triplanar_fragment_begin,
+  triplanar_begin_vertex,
+} from './ShaderChunk';
+
 class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
   constructor(parameters) {
     super();
@@ -9,6 +17,8 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
 
     this.defines = {
       USE_UV: '', // enables vUv
+      // USE_UV_MIX: '',
+      USE_TRIPLANAR: '',
     };
 
     this.direction = parameters.direction || new THREE.Vector3( 0.0, 1.0, 0.0 );
@@ -32,10 +42,6 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
     console.log(this.fragmentShader);
     console.log('--------------------------------------');
     this.setValues( parameters );
-  }
-
-  get vUVName() {
-    return 'vUv';
   }
 
   /**
@@ -72,15 +78,29 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
 
   setVertexShader() {
     this.vertexShader = /* glsl */`
-    #include <uv_pars_vertex> // defines vUv 
+    #include <uv_pars_vertex> // defines vUv
 
-    // from LayeredMaterial
+    #include <normal_pars_vertex> // defines vNormal
+ 
+    ${triplanar_common_pars}
+
     uniform vec3 lyrDirection;
 
     varying float height;
 
+    ${triplanar_pars_vertex}
+
     void main() {
       #include <uv_vertex> // refers to vUv
+
+      #include <beginnormal_vertex> // defines objectNormal from normal
+      #include <defaultnormal_vertex> // defines transformedNormal from objectNormal
+
+      ${triplanar_begin_vertex}
+
+      #ifndef FLAT_SHADED // Normal computed with derivatives when FLAT_SHADED
+    	  vNormal = normalize( transformedNormal );
+      #endif
 
       height = dot(lyrDirection, position);    
 
@@ -101,32 +121,49 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
     this.layers.forEach((l) => {
       layerUniforms += l.addFragmentUniforms();
       if (l.useDiffuse) {
-
         layerHeights += l.addFragmentHeight(heightName);
 
         layerDiffuseMixes = l.mixinFragmentDiffuse(layerDiffuseMixes);
     
-        layerDiffuseColors += l.addFragmentDiffuseColor(this.vUVName);
+        layerDiffuseColors += `vec4 ${l.diffuseColorName} = getTexture2D(${l.map0Name});\n`;
       }
     });
 
     this.fragmentShader = `
     #include <uv_pars_fragment> // refers to vUv
+    #include <normal_pars_fragment>
+
+    ${triplanar_common_pars}
   
+    ${triplanar_pars_fragment}
+
     ${layerUniforms}
 
     varying float height;
 
+
+    #ifdef USE_TRIPLANAR
+      vec4 getTexture2D(sampler2D tex) {
+        return triplanar(tex, trplUV);
+      }
+    #else
+      vec4 getTexture2D(sampler2D tex) {
+        return texture2D(tex , vUv);
+      }
+    #endif
+
     void main() {
-      //layerDiffuseColors
+      ${triplanar_fragment_begin}
+
+      #include <normal_fragment_begin>
+
       ${layerDiffuseColors}
 
-      // layerHeights
       ${layerHeights}
 
       vec4 lyr_baseColor = ${layerBaseColor};
 
-      gl_FragColor = ${layerDiffuseMixes}; // vec4(lyr_sample${this.layers[0].id}.xyz, 1.0 );
+      gl_FragColor = ${layerDiffuseMixes};
     }
     `;
   }  
