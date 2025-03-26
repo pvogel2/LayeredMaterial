@@ -21,14 +21,18 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
       USE_TRIPLANAR: '',
     };
 
+    this.lights = true; // enable light usage in shaders
+
     this.direction = parameters.direction || new THREE.Vector3( 0.0, 1.0, 0.0 );
 
     this.uniforms = THREE.UniformsUtils.merge([
-      // THREE.UniformsLib["common" ],
-      // THREE.UniformsLib["lights" ],
+      THREE.UniformsLib["common" ], // for lighting diffuse needs to be set
+      THREE.UniformsLib["lights" ],
       // THREE.UniformsLib["bumpmap" ],
       {
         lyrDirection: { value: this.direction },
+        specular: { value: new THREE.Color( 0x111111 )},
+        shininess: { value: 1.0 },
       }
     ]);
 
@@ -81,10 +85,12 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
     #include <uv_pars_vertex> // defines vUv
 
     #include <normal_pars_vertex> // defines vNormal
- 
+
     ${triplanar_common_pars}
 
     uniform vec3 lyrDirection;
+
+    varying vec3 vViewPosition;
 
     varying float height;
 
@@ -96,15 +102,18 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
       #include <beginnormal_vertex> // defines objectNormal from normal
       #include <defaultnormal_vertex> // defines transformedNormal from objectNormal
 
+      #include <begin_vertex> // defines transformed
+      #include <project_vertex> // defines mvPosition, uses transformed, sets gl_Position
+
       ${triplanar_begin_vertex}
 
       #ifndef FLAT_SHADED // Normal computed with derivatives when FLAT_SHADED
     	  vNormal = normalize( transformedNormal );
       #endif
 
-      height = dot(lyrDirection, position);    
+      height = dot(lyrDirection, position); 
 
-      gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+      vViewPosition = - mvPosition.xyz;
     }
     `;
   }
@@ -130,8 +139,20 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
     });
 
     this.fragmentShader = `
+    #include <common>
     #include <uv_pars_fragment> // refers to vUv
     #include <normal_pars_fragment>
+
+    #include <bsdfs> // define lighting function used by phong
+    #include <lights_phong_pars_fragment> // define light calcuation functions for lights pars, based on phong
+    #include <lights_pars_begin>
+
+    uniform vec3 diffuse; // used by diffuseColor
+    uniform vec3 emissive;
+    uniform vec3 specular; // used by phong lighting
+    uniform float specularStrength; // used by phong lighting
+    uniform float shininess; // used by phong lighting
+    uniform float opacity; // used by diffuseColor
 
     ${triplanar_common_pars}
   
@@ -141,6 +162,7 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
 
     varying float height;
 
+    // varying vec3 vViewPosition; // defined by <material>_lights_pars_fragment
 
     #ifdef USE_TRIPLANAR
       vec4 getTexture2D(sampler2D tex) {
@@ -155,7 +177,19 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
     void main() {
       ${triplanar_fragment_begin}
 
+      vec4 diffuseColor = vec4( diffuse, opacity ); // used by phong lighting
+
       #include <normal_fragment_begin>
+
+      // initialize light processing
+    	ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );
+      vec3 totalEmissiveRadiance = emissive;
+
+      // accumulation
+      #include <lights_phong_fragment>
+      #include <lights_fragment_begin>
+      // #include <lights_fragment_maps>
+      #include <lights_fragment_end>
 
       ${layerDiffuseColors}
 
@@ -163,7 +197,9 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
 
       vec4 lyr_baseColor = ${layerBaseColor};
 
-      gl_FragColor = ${layerDiffuseMixes};
+      vec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + totalEmissiveRadiance + reflectedLight.directSpecular + reflectedLight.indirectSpecular;
+
+      gl_FragColor = vec4( outgoingLight, diffuseColor.a ) * ${layerDiffuseMixes};
     }
     `;
   }  
