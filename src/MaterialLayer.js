@@ -105,19 +105,12 @@ export default class MaterialLayer {
     return `1. ${(this.range ? `* ${this.heightName}` : '')} ${this.slope ? `* ${this.slopeName}` : ''}`;
   }
 
-  get heightModule() {
-    if (!this.range) {
-      return '1.';
-    }
-    return this.heightName;
-  }
-
   getTextureName(base, idx) {
     return `lyr_${base}${idx}${this.id}`;
   }
 
   mixinFragmentDiffuse(diffuseMixes) {
-    return `mix(${diffuseMixes}, ${this.diffuseColorName}, ${this.heightModule})`;
+    return `mix(${diffuseMixes}, ${this.diffuseColorName}, ${this.hsModul})`;
   }
 
   addFragmentHeight(heightName) {
@@ -127,7 +120,17 @@ export default class MaterialLayer {
     return `float ${this.heightName} = smoothstep(${this.rangeName}.x - ${this.rangeTrnsName}.x,${this.rangeName}.x, ${heightName}) * (1. -smoothstep(${this.rangeName}.y, ${this.rangeName}.y + ${this.rangeTrnsName}.y, ${heightName}))\n;`;
   }
 
-  addFragmentDiffuseColor(uvName) {
+  addFragmentSlope() {
+    if (!this.slope) {
+      return '';
+    }
+
+    const lowerSlope = `abs(slope${this.useSlopeDisturb ? ` + ${this.slopeDstrbStrengthName}.x * noise(${this.slopeDstrbOctavesName}.x * vUv)` : ``})`;
+    const upperSlope = `abs(slope${this.useSlopeDisturb ? ` + ${this.slopeDstrbStrengthName}.y * noise(${this.slopeDstrbOctavesName}.y * vUv)` : ``})`;
+    return `float ${this.slopeName} = smoothstep(${this.slopeName}.x - ${this.slopeTrnsName}.x, ${this.slopeName}.x, ${lowerSlope}) * (1. - smoothstep(${this.slopeName}.y, ${this.slopeName}.y + ${this.slopeTrnsName}.y, ${upperSlope}));\n`;
+}
+
+  addFragmentDiffuseColor() {
     return `vec4 ${this.diffuseColorName} = getTexture2D(${this.map0Name});\n`;
   }
 
@@ -144,6 +147,13 @@ export default class MaterialLayer {
         uniforms += `uniform vec2 ${this.rangeTrnsName};\n`;
       }
     }
+    if (this.slope) {
+      uniforms += `uniform vec2 ${this.slopeName};\n`;
+      uniforms += `uniform vec2 ${this.slopeDstrbStrengthName};\n`;
+      uniforms += `uniform vec2 ${this.slopeDstrbOctavesName};\n`;
+      uniforms += `uniform vec2 ${this.slopeTrnsName};\n`;
+    }
+
     uniforms += `\n`;
     return uniforms;
   }

@@ -6,6 +6,7 @@ import {
   triplanar_pars_fragment,
   triplanar_fragment_begin,
   triplanar_begin_vertex,
+  noise_pars_fragment,
 } from './ShaderChunk';
 
 class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
@@ -94,6 +95,7 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
     varying vec3 vViewPosition;
 
     varying float height;
+    varying float slope;
 
     ${triplanar_pars_vertex}
 
@@ -112,7 +114,8 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
     	  vNormal = normalize( transformedNormal );
       #endif
 
-      height = dot(lyrDirection, position); 
+      height = dot(lyrDirection, position);
+      slope = 1. - 0.99 * dot(lyrDirection, normalize(normal));
 
       vViewPosition = - mvPosition.xyz;
     }
@@ -123,6 +126,7 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
     let layerUniforms = '';
     let layerDiffuseColors = '';
     let layerHeights = '';
+    let layerSlopes = '';
 
     let layerDiffuseMixes = 'lyr_baseColor';
     const layerBaseColor = 'vec4(0., 0., 0., 1.)';
@@ -132,6 +136,7 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
       layerUniforms += l.addFragmentUniforms();
       if (l.useDiffuse) {
         layerHeights += l.addFragmentHeight(heightName);
+        layerSlopes += l.addFragmentSlope();
 
         layerDiffuseMixes = l.mixinFragmentDiffuse(layerDiffuseMixes);
     
@@ -155,6 +160,8 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
     uniform float shininess; // used by phong lighting
     uniform float opacity; // used by diffuseColor
 
+    ${noise_pars_fragment}
+
     ${triplanar_common_pars}
   
     ${triplanar_pars_fragment}
@@ -162,6 +169,7 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
     ${layerUniforms}
 
     varying float height;
+    varying float slope;
 
     // varying vec3 vViewPosition; // defined by <material>_lights_pars_fragment
 
@@ -195,6 +203,8 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
       ${layerDiffuseColors}
 
       ${layerHeights}
+
+      ${layerSlopes}
 
       vec4 lyr_baseColor = ${layerBaseColor};
 
