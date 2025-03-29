@@ -26,13 +26,14 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
     this.direction = parameters.direction || new THREE.Vector3( 0.0, 1.0, 0.0 );
 
     this.uniforms = THREE.UniformsUtils.merge([
-      THREE.UniformsLib["common" ], // for lighting diffuse needs to be set
+      THREE.UniformsLib["common" ], // for lighting diffuse needs to be set ,done here with white
       THREE.UniformsLib["lights" ],
       // THREE.UniformsLib["bumpmap" ],
       {
         lyrDirection: { value: this.direction },
-        specular: { value: new THREE.Color( 0x111111 )},
-        shininess: { value: 1.0 },
+        specular: { value: new THREE.Color( 0xffffff )},
+        shininess: { value: 30.0 },
+        specularStrength: { value: 0.2 }, // TODO: per layer, support for textures
       }
     ]);
 
@@ -204,6 +205,7 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
     `;
   }  
 }
+
 
 MeshLayeredMaterial2.prototype.isMeshLayeredMaterial2 = true;
 MeshLayeredMaterial2.prototype.isShaderMaterial = true; // this skips update of uniforms, handle on your own!

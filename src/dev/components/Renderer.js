@@ -232,7 +232,7 @@ function Renderer(props) {
       sunLight.position.set(-10, 10, 10);
       const sunHelper = new THREE.DirectionalLightHelper( sunLight, 3 );
 
-      const ambientLight = new THREE.AmbientLight( 0x595959, 4);
+      const ambientLight = new THREE.AmbientLight( 0x595959, 1 );
       dispatch({ type: 'SET_MESHES', payload: [landscapeMesh, sphereMesh, boxMesh, planeMesh] });
 
       scene.add( ambientLight );
