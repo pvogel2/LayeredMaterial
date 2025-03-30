@@ -3,6 +3,7 @@ const initialState = {
   layer: null,
   randomize: true,
   triplanar: true,
+  bumpmap: true,
   minmax: [-5, 5],
   mesh: '',
 }
@@ -113,6 +114,20 @@ export default combineReducers({
 
      return updateObject(state, { randomize: action.payload });
     }
+
+    case 'BUMPMAP': {
+      const defines = { ...state.material.defines };
+      if (action.payload === true) {
+        defines.USE_BUMPMAP = '';
+      } else {
+        delete defines.USE_BUMPMAP;
+      }
+      state.material.setValues({ defines });
+      state.material.needsUpdate = true;
+
+     return updateObject(state, { bumpmap: action.payload });
+    }
+
     default:
       return state;
   }

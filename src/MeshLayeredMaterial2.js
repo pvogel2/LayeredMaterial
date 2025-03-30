@@ -9,6 +9,7 @@ import {
   noise_pars_fragment,
   mixuv_pars_fragment,
   mixuv_fragment_begin,
+  bump_pars_fragment,
 } from './ShaderChunk';
 
 class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
@@ -22,16 +23,19 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
       USE_UV: '', // enables vUv
       USE_MIXUV: '',
       USE_TRIPLANAR: '',
+      USE_BUMPMAP: '',
     };
 
     this.lights = true; // enable light usage in shaders
 
     this.direction = parameters.direction || new THREE.Vector3( 0.0, 1.0, 0.0 );
 
+    this.useBump = this.layers.reduce((acc, l) => acc || l.useBump, false);
+
     this.uniforms = THREE.UniformsUtils.merge([
       THREE.UniformsLib["common" ], // for lighting diffuse needs to be set ,done here with white
       THREE.UniformsLib["lights" ],
-      // THREE.UniformsLib["bumpmap" ],
+      THREE.UniformsLib["bumpmap" ],
       {
         lyrDirection: { value: this.direction },
         specular: { value: new THREE.Color( 0xffffff )},
@@ -44,12 +48,35 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
 
     this.setVertexShader();
     this.setFragmentShader();
+
     console.log('--------------------------------------');
     console.log(this.vertexShader);
     console.log('--------------------------------------');
     console.log(this.fragmentShader);
     console.log('--------------------------------------');
+
     this.setValues( parameters );
+  }
+
+  sum(a, b) {
+    return `${a ? `${a} + ` : a}${b}`;
+  }
+  
+  mult(a, b) {
+    return `${a ? `${a} * ` : a}${b}`;
+  }
+  
+  // TODO: find correct sollution for slope and height ranges
+  //  glsl: normal = normalize(mix(${layerNormals[0].normal}, ${layerNormals[1].normal}, ${layerNormals[1].slope}));
+  getNormal(layerNormals) {
+    let normals = '';
+    layerNormals.forEach(n => {
+      normals = this.sum(normals, n.normal);
+    });
+    return layerNormals.length
+      ? `normal = normalize(${normals});`
+      : ''
+    ;
   }
 
   /**
@@ -89,6 +116,10 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
     #include <uv_pars_vertex> // defines vUv
 
     #include <normal_pars_vertex> // defines vNormal
+  
+    #ifdef USE_BUMPMAP
+      #define BUMPMAP_UV vUv // define uv coords, normaly defined by existing bump map in material
+    #endif
 
     ${triplanar_common_pars}
 
@@ -129,6 +160,7 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
     let layerDiffuseColors = '';
     let layerHeights = '';
     let layerSlopes = '';
+    const layerNormals = [];
 
     let layerDiffuseMixes = 'lyr_baseColor';
     const layerBaseColor = 'vec4(0., 0., 0., 1.)';
@@ -145,12 +177,22 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
         // layerDiffuseColors += `vec4 ${l.diffuseColorName} = randomizeTileTextures(${l.mapName});\n`;
         layerDiffuseColors += `vec4 ${l.diffuseColorName} = getTexture2D(${l.mapName});\n`;
       }
+
+      if (l.useBump) {
+        layerNormals.push({
+          normal: `perturbNormalArb( -vViewPosition, normal, dHdxy_fwd(${l.bumpName}, ${l.bumpScaleName} ), faceDirection ) * ${l.hsModul}`,
+          slope: (l.slope ? l.slopeName : null),
+          height: (l.range ? l.heightName: null),
+          bumpScale: l.bumpScale,
+        });
+      }
     });
 
     this.fragmentShader = `
     #include <common>
     #include <uv_pars_fragment> // refers to vUv
     #include <normal_pars_fragment>
+    #include <bumpmap_pars_fragment>
 
     #include <bsdfs> // define lighting function used by phong
     #include <lights_phong_pars_fragment> // define light calcuation functions for lights pars, based on phong
@@ -172,6 +214,8 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
     ${triplanar_pars_fragment}
   
     ${layerUniforms}
+  
+    ${bump_pars_fragment}
 
     varying float height;
     varying float slope;
@@ -197,23 +241,27 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
 
       vec4 diffuseColor = vec4( diffuse, opacity ); // used by phong lighting
 
-      #include <normal_fragment_begin>
+      #include <normal_fragment_begin> // normal vector defind here from vNormal
 
       // initialize light processing
     	ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );
       vec3 totalEmissiveRadiance = emissive;
-
-      // accumulation
-      #include <lights_phong_fragment>
-      #include <lights_fragment_begin>
-      // #include <lights_fragment_maps>
-      #include <lights_fragment_end>
 
       ${layerDiffuseColors}
 
       ${layerHeights}
 
       ${layerSlopes}
+
+      #ifdef USE_BUMPMAP
+      ${this.getNormal(layerNormals)}
+      #endif
+
+      // accumulation
+      #include <lights_phong_fragment>
+      #include <lights_fragment_begin>
+      // #include <lights_fragment_maps>
+      #include <lights_fragment_end>
 
       vec4 lyr_baseColor = ${layerBaseColor};
 

@@ -59,5 +59,40 @@ export default /* glsl */`
   	  return cx + cy + cz;
     #endif
   }
+
+  vec3 triplanarDFDx(sampler2D map, TriplanarUV tuv) {
+    vec2 dSTdx_x = dFdx( tuv.x );
+    vec2 dSTdx_y = dFdx( tuv.y );
+    vec2 dSTdx_z = dFdx( tuv.z );
+  
+    vec2 tx = (tuv.x + dSTdx_x);
+    vec2 ty = (tuv.y + dSTdx_y);
+    vec2 tz = (tuv.z + dSTdx_z);
+  
+    // the resulting value only extracted from x merges
+    return vec3(
+      texture2D(map, tx).x * trplBF.x,
+      texture2D(map, ty).x * trplBF.y,
+      texture2D(map, tz).x * trplBF.z
+    );
+  }
+
+      
+  vec3 triplanarDFDy(sampler2D map, TriplanarUV tuv) {
+    vec2 dSTdy_x = dFdy( tuv.x );
+    vec2 dSTdy_y = dFdy( tuv.y );
+    vec2 dSTdy_z = dFdy( tuv.z );
+  
+    vec2 tx = (tuv.x + dSTdy_x);
+    vec2 ty = (tuv.y + dSTdy_y);
+    vec2 tz = (tuv.z + dSTdy_z);
+  
+    // the resulting value only extracted from x merges
+    return vec3(
+      texture2D(map, tx).x * trplBF.x,
+      texture2D(map, ty).x * trplBF.y,
+      texture2D(map, tz).x * trplBF.z
+    );
+  }
 #endif
 `;

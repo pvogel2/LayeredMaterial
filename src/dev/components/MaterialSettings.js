@@ -34,7 +34,7 @@ let toggleDialog = false;
 
 const testMaterial = new  MeshStandardMaterial({ side: DoubleSide });
 function MaterialSettings(props) {
-  const { minmax, randomize, triplanar, material, dispatch } = props;
+  const { minmax, randomize, triplanar, bumpmap, material, dispatch } = props;
 
   const [dialogOpen, setDialogOpen] = useState(true);
 
@@ -47,6 +47,8 @@ function MaterialSettings(props) {
   const [testMaterialChecked, setTestMaterialChecked] = useState(false);
 
   const [layeredMaterial, setLayeredMaterial] = useState(null);
+
+  const [bumpmapChecked, setBumpmapChecked] = useState(bumpmap);
 
   function handleKeyDown(e) {
     if (e.key !== 'm') return;
@@ -73,6 +75,12 @@ function MaterialSettings(props) {
     const checked = event.target.checked;
     dispatch({ type: 'TRIPLANAR', payload: checked });
     setTriplanarChecked(checked);
+  }
+
+  function onBumpmapChange(event) {
+    const checked = event.target.checked;
+    dispatch({ type: 'BUMPMAP', payload: checked });
+    setBumpmapChecked(checked);
   }
 
   function onTestMaterialChange(event) {
@@ -143,6 +151,10 @@ function MaterialSettings(props) {
           label="Triplanar mapping"
         />
         <FormControlLabel
+          control={<Switch disabled={testMaterialChecked} checked={bumpmapChecked} onChange={onBumpmapChange} name="bumpmap" />}
+          label="Bump mapping"
+        />
+        <FormControlLabel
           control={<Switch checked={testMaterialChecked} onChange={onTestMaterialChange} name="testmat" />}
           label="Apply test material"
         />
@@ -160,6 +172,7 @@ function mapStateToProps(state) {
     randomize: state.randomize,
     triplanar: state.triplanar,
     minmax: state.minmax,
+    bumpmap: state.bumpmap,
   };
 };
 

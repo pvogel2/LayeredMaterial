@@ -170,13 +170,13 @@ export default class MaterialLayer {
       this.map.wrapS = this.map.wrapT = THREE.RepeatWrapping;
       //this.map.magFilter = THREE.NearestFilter;
       u[this.mapName] = { type: "t", value: this.map };
-      u[this.bumpScaleName] = { value: this.bumpScale };
     }
 
     if (this.useBump) {
       this.bumpMap.wrapS = this.bumpMap.wrapT = THREE.RepeatWrapping;
       // this.bumpMap.magFilter = THREE.NearestFilter;
       u[this.bumpName] = { type: "t", value: this.bumpMap };
+      u[this.bumpScaleName] = { value: this.bumpScale };
     }
   }
 }
