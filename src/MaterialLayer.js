@@ -32,8 +32,6 @@ export default class MaterialLayer {
 
     this.useDiffuse = !!this.map;
     this.useBump = !!this.bumpMap && !!this.bumpScale;
-
-    this.mixBump = !!(this.bumpMap?.length === 2);
   }
 
   get heightName() {
@@ -88,16 +86,8 @@ export default class MaterialLayer {
     return this.getTextureName('mp', 0);
   }
 
-  get map1Name() {
-    return this.getTextureName('mp', 1);
-  }
-
-  get bump0Name() {
+  get bumpName() {
     return this.getTextureName('bmp', 0);
-  }
-
-  get bump1Name() {
-    return this.getTextureName('bmp', 1);
   }
 
   get hsModul() {
@@ -146,11 +136,17 @@ export default class MaterialLayer {
         uniforms += `uniform vec2 ${this.rangeTrnsName};\n`;
       }
     }
+
     if (this.slope) {
       uniforms += `uniform vec2 ${this.slopeName};\n`;
       uniforms += `uniform vec2 ${this.slopeDstrbStrengthName};\n`;
       uniforms += `uniform vec2 ${this.slopeDstrbOctavesName};\n`;
       uniforms += `uniform vec2 ${this.slopeTrnsName};\n`;
+    }
+
+    if (this.useBump) {
+      uniforms += `uniform sampler2D ${this.bumpName};\n`;
+      uniforms += `uniform float ${this.bumpScaleName};\n`;
     }
 
     uniforms += `\n`;
@@ -172,25 +168,15 @@ export default class MaterialLayer {
     }
     if (this.useDiffuse) {
       this.map.wrapS = this.map.wrapT = THREE.RepeatWrapping;
-      //this.map[0].magFilter = THREE.NearestFilter;
+      //this.map.magFilter = THREE.NearestFilter;
       u[this.mapName] = { type: "t", value: this.map };
       u[this.bumpScaleName] = { value: this.bumpScale };
     }
 
     if (this.useBump) {
-      if(!Array.isArray(this.bumpMap)) {
-        this.bumpMap = [this.bumpMap];
-      }
-
-      this.bumpMap[0].wrapS = this.bumpMap[0].wrapT = THREE.RepeatWrapping;
-      // this.bumpMap[0].magFilter = THREE.NearestFilter;
-      u[this.bump0Name] = { type: "t", value: this.bumpMap[0] };
-
-      if (this.mixBump) {
-        this.bumpMap[1].wrapS = this.bumpMap[1].wrapT = THREE.RepeatWrapping;
-        // this.bumpMap[1].magFilter = THREE.NearestFilter;
-        u[this.bump1Name] = { type: "t", value: this.bumpMap[1] };
-      }
+      this.bumpMap.wrapS = this.bumpMap.wrapT = THREE.RepeatWrapping;
+      // this.bumpMap.magFilter = THREE.NearestFilter;
+      u[this.bumpName] = { type: "t", value: this.bumpMap };
     }
   }
 }
