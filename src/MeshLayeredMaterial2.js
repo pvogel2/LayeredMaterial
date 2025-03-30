@@ -7,6 +7,8 @@ import {
   triplanar_fragment_begin,
   triplanar_begin_vertex,
   noise_pars_fragment,
+  mixuv_pars_fragment,
+  mixuv_fragment_begin,
 } from './ShaderChunk';
 
 class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
@@ -18,7 +20,7 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
 
     this.defines = {
       USE_UV: '', // enables vUv
-      // USE_UV_MIX: '',
+      USE_MIXUV: '',
       USE_TRIPLANAR: '',
     };
 
@@ -140,7 +142,8 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
 
         layerDiffuseMixes = l.mixinFragmentDiffuse(layerDiffuseMixes);
     
-        layerDiffuseColors += `vec4 ${l.diffuseColorName} = getTexture2D(${l.map0Name});\n`;
+        // layerDiffuseColors += `vec4 ${l.diffuseColorName} = randomizeTileTextures(${l.mapName});\n`;
+        layerDiffuseColors += `vec4 ${l.diffuseColorName} = getTexture2D(${l.mapName});\n`;
       }
     });
 
@@ -162,20 +165,24 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
 
     ${noise_pars_fragment}
 
+    ${mixuv_pars_fragment}
+
     ${triplanar_common_pars}
   
     ${triplanar_pars_fragment}
-
+  
     ${layerUniforms}
 
     varying float height;
     varying float slope;
 
-    // varying vec3 vViewPosition; // defined by <material>_lights_pars_fragment
-
     #ifdef USE_TRIPLANAR
       vec4 getTexture2D(sampler2D tex) {
         return triplanar(tex, trplUV);
+      }
+    #elif defined USE_MIXUV
+      vec4 getTexture2D(sampler2D tex) {
+        return vec4(mix(texture2D(tex , vUvCent).rgb, texture2D(tex , vUvCorn).rgb, vUvMixThreshold), 1.);
       }
     #else
       vec4 getTexture2D(sampler2D tex) {
@@ -184,6 +191,8 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
     #endif
 
     void main() {
+      ${mixuv_fragment_begin}
+
       ${triplanar_fragment_begin}
 
       vec4 diffuseColor = vec4( diffuse, opacity ); // used by phong lighting

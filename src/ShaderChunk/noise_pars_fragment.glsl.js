@@ -3,6 +3,7 @@ export default /* glsl */`
 // https://www.shadertoy.com/view/4dS3Wd
 #if !defined MWM_NOISE
   #define MWM_NOISE
+
   float noise_random (in vec2 st) {
     return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
   }
@@ -24,4 +25,25 @@ export default /* glsl */`
       (d - b) * u.x * u.y;
   }
 #endif
+
+#if !defined MWM_FBM
+  #define MWM_FBM
+
+  float fbm (vec2 point) {
+    // Initial values
+    //int octaves = 6;
+    float value = 0.0;
+    float amplitude = .5;
+    float frequency = 0.;
+
+    // Loop of octaves
+    for (int i = 0; i < 6; i++) {
+        value += amplitude * noise(point);
+        point *= 2.;
+        amplitude *= .5;
+    }
+    return value;
+  }
+#endif
 `;
+

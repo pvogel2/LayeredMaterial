@@ -104,9 +104,9 @@ export default combineReducers({
     case 'RANDOMIZE': {
       const defines = { ...state.material.defines };
       if (action.payload === true) {
-        defines.USE_UV_MIX = '';
+        defines.USE_MIXUV = '';
       } else {
-        delete defines.USE_UV_MIX;
+        delete defines.USE_MIXUV;
       }
       state.material.setValues({ defines });
       state.material.needsUpdate = true;

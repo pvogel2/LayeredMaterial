@@ -160,7 +160,7 @@ function Renderer(props) {
           slopeTransition: [0, 0],
           // map: [textureLoader.load(GRASS01_JPG), textureLoader.load(GRASS02_JPG)],
           // bumpMap: [textureLoader.load(GRASS1BUMP_PNG), textureLoader.load(GRASS2BUMP_PNG)],
-          map: [textureLoader.load(GRASS01_JPG)],
+          map: textureLoader.load(GRASS01_JPG),
           bumpMap: [textureLoader.load(GRASS1BUMP_PNG)],
           bumpScale: 0.02,
         }),
@@ -169,21 +169,10 @@ function Renderer(props) {
           range:[-2, 10],
           rangeTrns: [0, 0],
           slope:[0, 1],
-          map: [textureLoader.load(ROCK01_JPG)],//, textureLoader.load(ROCK02_JPG)],
+          map: textureLoader.load(ROCK01_JPG),//, textureLoader.load(ROCK02_JPG)],
           bumpMap: [textureLoader.load(ROCK2BUMP_PNG)],
           bumpScale: 0.04,
         }),
-        /*new MaterialLayer({
-          id: 'test',
-          //range: [1, 2.5],
-          //rangeTrns: [0, 0],
-          //slope:[0.0, 0.2],
-          //slope:[0, 1],
-          // slopeTrns: 0.0,
-          map: [TEST01_JPG],
-          bumpMap: [GRASS1BUMP_PNG],
-          bumpScale: 0.08,
-        }),*/
       ];
 
       // return new THREE.MeshStandardMaterial({ side: THREE.DoubleSide });

@@ -33,7 +33,6 @@ export default class MaterialLayer {
     this.useDiffuse = !!this.map;
     this.useBump = !!this.bumpMap && !!this.bumpScale;
 
-    this.mixDiffuse = !!(this.map?.length === 2);
     this.mixBump = !!(this.bumpMap?.length === 2);
   }
 
@@ -85,7 +84,7 @@ export default class MaterialLayer {
     return `lyr_dff_clr_${this.id}`;
   }
 
-  get map0Name() {
+  get mapName() {
     return this.getTextureName('mp', 0);
   }
 
@@ -131,14 +130,14 @@ export default class MaterialLayer {
 }
 
   addFragmentDiffuseColor() {
-    return `vec4 ${this.diffuseColorName} = getTexture2D(${this.map0Name});\n`;
+    return `vec4 ${this.diffuseColorName} = getTexture2D(${this.mapName});\n`;
   }
 
   addFragmentUniforms() {
     let uniforms = `// mixin layer ${this.id} uniforms\n`;
     if (this.useDiffuse) {
       // write out diffuse color map texture
-      uniforms += `uniform sampler2D ${this.map0Name};\n`;
+      uniforms += `uniform sampler2D ${this.mapName};\n`;
 
       if (this.range) {
         uniforms += `uniform vec2 ${this.rangeName};\n`;
@@ -172,20 +171,10 @@ export default class MaterialLayer {
       u[this.slopeDstrbOctavesName] = { type: 'vec2', value: new THREE.Vector2(this.slopeDstrbOctaves[0], this.slopeDstrbOctaves[1]) };
     }
     if (this.useDiffuse) {
-      if(!Array.isArray(this.map)) {
-        this.map = [this.map];
-      }
-
-      this.map[0].wrapS = this.map[0].wrapT = THREE.RepeatWrapping;
+      this.map.wrapS = this.map.wrapT = THREE.RepeatWrapping;
       //this.map[0].magFilter = THREE.NearestFilter;
-      u[this.map0Name] = { type: "t", value: this.map[0] };
+      u[this.mapName] = { type: "t", value: this.map };
       u[this.bumpScaleName] = { value: this.bumpScale };
-
-      if (this.mixDiffuse) {
-        this.map[1].wrapS = this.map[1].wrapT = THREE.RepeatWrapping;
-        //this.map[1].magFilter = THREE.NearestFilter;
-        u[this.map1Name] = { type: "t", value: this.map[1] };
-      }
     }
 
     if (this.useBump) {
