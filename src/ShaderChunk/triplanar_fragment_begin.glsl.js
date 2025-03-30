@@ -13,8 +13,6 @@ export default /* glsl */`
 
     trplMixThreshold = triplanarUVThreshold();
 
-    trplMixAmount = triplanarMixAmount();
-
     triplanarRotateUVs();
   #endif
 #endif

@@ -13,7 +13,6 @@ export default /* glsl */`
     TriplanarUV trplUVFract;
 
     vec3 trplMixThreshold;
-    vec3 trplMixAmount;
 
     void triplanarRotateUVs() {
       trplUVCorn.x = rotateQuadrants(trplUVFract.x, trplUVFloor.x);
@@ -35,19 +34,6 @@ export default /* glsl */`
         smoothstep(1. - .4, 1.,  dot(centDist_x, centDist_x) * 4.0),
         smoothstep(1. - .4, 1.,  dot(centDist_y, centDist_y) * 4.0),
         smoothstep(1. - .4, 1.,  dot(centDist_z, centDist_z) * 4.0)
-      );
-    }
-
-    vec3 triplanarMixAmount() {
-      vec3 trplNoiseUV = vec3(
-        noise(trplUV.x),
-        noise(trplUV.y),
-        noise(trplUV.z)
-      );
-      return vec3(
-        (0., .6, trplNoiseUV.x * fbm(trplUV.x * 3.)) + 0.2 * smoothstep(0., 1., trplNoiseUV.x * fbm(trplUV.x * 40.)),
-        (0., .6, trplNoiseUV.y * fbm(trplUV.y * 3.)) + 0.2 * smoothstep(0., 1., trplNoiseUV.y * fbm(trplUV.y * 40.)),
-        (0., .6, trplNoiseUV.z * fbm(trplUV.z * 3.)) + 0.2 * smoothstep(0., 1., trplNoiseUV.z * fbm(trplUV.z * 40.))
       );
     }
   #endif
