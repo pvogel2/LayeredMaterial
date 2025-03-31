@@ -58,27 +58,6 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
     this.setValues( parameters );
   }
 
-  sum(a, b) {
-    return `${a ? `${a} + ` : a}${b}`;
-  }
-  
-  mult(a, b) {
-    return `${a ? `${a} * ` : a}${b}`;
-  }
-  
-  // TODO: find correct sollution for slope and height ranges
-  //  glsl: normal = normalize(mix(${layerNormals[0].normal}, ${layerNormals[1].normal}, ${layerNormals[1].slope}));
-  getNormal(layerNormals) {
-    let normals = '';
-    layerNormals.forEach(n => {
-      normals = this.sum(normals, n.normal);
-    });
-    return layerNormals.length
-      ? `normal = normalize(${normals});`
-      : ''
-    ;
-  }
-
   /**
    * Change parameters on runtime
    * 
@@ -165,7 +144,7 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
     let layerDiffuseColors = '';
     let layerHeights = '';
     let layerSlopes = '';
-    const layerNormals = [];
+    let layerNormals = 'vec3(0.)';
 
     let layerDiffuseMixes = 'lyr_baseColor';
     const layerBaseColor = 'vec4(0., 0., 0., 1.)';
@@ -175,25 +154,19 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
       if (!l.enabled) {
         return;
       }
+
       layerUniforms += l.addFragmentUniforms();
+
       if (l.useDiffuse) {
         layerHeights += l.addFragmentHeight(heightName);
         layerSlopes += l.addFragmentSlope();
 
         layerDiffuseMixes = l.mixinFragmentDiffuse(layerDiffuseMixes);
     
-        // layerDiffuseColors += `vec4 ${l.diffuseColorName} = randomizeTileTextures(${l.mapName});\n`;
-        layerDiffuseColors += `vec4 ${l.diffuseColorName} = getTexture2D(${l.mapName});\n`;
+        layerDiffuseColors += l.addDiffuseColor();
       }
 
-      if (l.useBump) {
-        layerNormals.push({
-          normal: `perturbNormalArb( -vViewPosition, normal, dHdxy_fwd(${l.bumpName}, ${l.bumpScaleName} ), faceDirection ) * ${l.hsModul}`,
-          slope: (l.slope ? l.slopeName : null),
-          height: (l.range ? l.heightName: null),
-          bumpScale: l.bumpScale,
-        });
-      }
+      layerNormals += `+ ${l.addBumpNormal()}`;
     });
 
     this.fragmentShader = `
@@ -262,7 +235,8 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
       ${layerSlopes}
 
       #ifdef USE_BUMPMAP
-      ${this.getNormal(layerNormals)}
+        // TODO: find correct sollution for slope and height ranges
+        normal = normalize(${layerNormals});
       #endif
 
       // accumulation

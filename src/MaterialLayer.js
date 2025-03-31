@@ -108,6 +108,17 @@ export default class MaterialLayer {
     return `mix(${diffuseMixes}, ${this.diffuseColorName}, ${this.hsModul})`;
   }
 
+  addDiffuseColor() {
+    return `vec4 ${this.diffuseColorName} = getTexture2D(${this.mapName});\n`;
+  }
+
+  addBumpNormal() {
+    if (!this.useBump) {
+      return '';
+    }
+    return `perturbNormalArb( -vViewPosition, normal, dHdxy_fwd(${this.bumpName}, ${this.bumpScaleName} ), faceDirection ) * ${this.hsModul}`;
+  }
+
   addFragmentHeight(heightName) {
     if (!this.range) {
       return '';
