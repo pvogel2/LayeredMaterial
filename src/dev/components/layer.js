@@ -2,7 +2,10 @@ import React from 'react';
 
 import Range from './range';
 import Slope from './slope';
-import { Typography, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Box, Typography, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 
 function Layer(props) {
   const {
@@ -49,6 +52,15 @@ function Layer(props) {
     onBoundariesChange(l);
   }
 
+  function handleToggleLayerClick(e) {
+    e.stopPropagation();
+    layer.toggle();
+    const l = {
+      enabled: layer.enabled,
+    }
+    onBoundariesChange(l);
+  }
+
   const range = !layer.range
     ? null
     : (
@@ -76,8 +88,15 @@ function Layer(props) {
 
   return (
     <Accordion expanded={expandedLayer === layer.id} onChange={onAccordionChange}>
-      <AccordionSummary>
+
+      <AccordionSummary
+        expandIcon={<ExpandMoreIcon />}
+      >
+        <Box sx={{display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between' }}>
         <Typography variant='h6'>{layer.id}</Typography>
+        { layer.enabled && <VisibilityIcon fontSize='small' onClick={handleToggleLayerClick} sx={{margin: 'auto 10px auto 0'}}/> }
+        { !layer.enabled && <VisibilityOffIcon fontSize='small' onClick={handleToggleLayerClick} sx={{margin: 'auto 10px auto 0'}}/> }
+        </Box>
       </AccordionSummary>
       <AccordionDetails>
         <div className={className}>

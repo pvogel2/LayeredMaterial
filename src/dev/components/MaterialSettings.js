@@ -8,6 +8,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import Layer from './layer.js';
 import { styled } from '@mui/material/styles';
 
+const TEST_JPG = '/images/testpattern.jpg';
+
 const StyledCard = styled(Card)({
   minWidth: '275px',
   position: 'absolute',
@@ -33,6 +35,7 @@ const StyledContent = styled(CardContent)({
 let toggleDialog = false;
 
 const testMaterial = new  MeshStandardMaterial({ side: DoubleSide });
+
 function MaterialSettings(props) {
   const { minmax, randomize, triplanar, bumpmap, material, dispatch } = props;
 
@@ -92,7 +95,6 @@ function MaterialSettings(props) {
     }
 
     if (checked && material.type.startsWith('MeshLayeredMaterial')) {
-      console.log(material);
       setLayeredMaterial(material);
     }
     dispatch({ type: 'SET_MATERIAL', payload: checked ? testMaterial : layeredMaterial });
@@ -156,7 +158,7 @@ function MaterialSettings(props) {
         />
         <FormControlLabel
           control={<Switch checked={testMaterialChecked} onChange={onTestMaterialChange} name="testmat" />}
-          label="Apply test material"
+          label="Apply dummy material"
         />
         </FormGroup>
         {mLayers}

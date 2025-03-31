@@ -109,6 +109,11 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
       this.uniforms[layer.slopeDstrbOctavesName].value.set(layer.slopeDstrbOctaves[0], layer.slopeDstrbOctaves[1]);
       this.uniformsNeedUpdate = true;
     }
+    if (typeof layer.enabled !== undefined) {
+      this.setVertexShader();
+      this.setFragmentShader();
+      this.needsUpdate = true;
+    }
   }
 
   setVertexShader() {
@@ -167,6 +172,9 @@ class MeshLayeredMaterial2 extends THREE.ShaderMaterial {
     const heightName = 'height';
   
     this.layers.forEach((l) => {
+      if (!l.enabled) {
+        return;
+      }
       layerUniforms += l.addFragmentUniforms();
       if (l.useDiffuse) {
         layerHeights += l.addFragmentHeight(heightName);

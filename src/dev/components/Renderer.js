@@ -3,14 +3,13 @@ import { connect } from 'react-redux';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as THREE from 'three';
 import MaterialLayer from '../../MaterialLayer';
-import MeshLayeredMaterial from '../../MeshLayeredMaterial';
 import MeshLayeredMaterial2 from '../../MeshLayeredMaterial2';
 
 
 function Renderer(props) {
   const {dispatch } = props;
 
-  const TEST01_JPG = '/images/testpattern.jpg';
+  const TEST_JPG = '/images/testpattern.jpg';
   const GRASS01_JPG = '/images/grass01.jpg';
   const GRASS02_JPG = '/images/grass02.jpg';
   const GRASS1BUMP_PNG = '/images/grass01_bump256.png';
@@ -154,7 +153,7 @@ function Renderer(props) {
       const layers = [
         new MaterialLayer({
           id: 'grass',
-          range: [-10, -2],
+          range: [-10, 0],
           rangeTrns: [0, 0],
           slope:[0, 1],
           slopeTransition: [0, 0],
@@ -164,12 +163,22 @@ function Renderer(props) {
         }),
         new MaterialLayer({
           id: 'rock',
-          range:[-2, 10],
+          range:[0, 10],
           rangeTrns: [0, 0],
           slope:[0, 1],
           map: textureLoader.load(ROCK01_JPG),
           bumpMap: textureLoader.load(ROCK2BUMP_PNG),
           bumpScale: 1,
+        }),
+        new MaterialLayer({
+          id: 'test',
+          range:[-10, 10],
+          rangeTrns: [0, 0],
+          slope:[0, 1],
+          map: textureLoader.load(TEST_JPG),
+          bumpMap: textureLoader.load(TEST_JPG),
+          bumpScale: 1,
+          // enabled: false,
         }),
       ];
 
@@ -217,9 +226,9 @@ function Renderer(props) {
       const sunLight = new THREE.DirectionalLight( 0xffffff, 1.3 );
       sunLight.castShadow = true;
       sunLight.position.set(-10, 10, 10);
-      const sunHelper = new THREE.DirectionalLightHelper( sunLight, 3 );
+      const sunHelper = new THREE.DirectionalLightHelper( sunLight, 5 );
 
-      const ambientLight = new THREE.AmbientLight( 0x595959, 1 );
+      const ambientLight = new THREE.AmbientLight( 0x595959, 5 );
       dispatch({ type: 'SET_MESHES', payload: [landscapeMesh, sphereMesh, boxMesh, planeMesh] });
 
       scene.add( ambientLight );

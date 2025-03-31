@@ -32,6 +32,8 @@ export default class MaterialLayer {
 
     this.useDiffuse = !!this.map;
     this.useBump = !!this.bumpMap && !!this.bumpScale;
+
+    this.enabled = config.enabled === false ? false : true;
   }
 
   get heightName() {
@@ -96,6 +98,10 @@ export default class MaterialLayer {
 
   getTextureName(base, idx) {
     return `lyr_${base}${idx}${this.id}`;
+  }
+
+  toggle() {
+    this.enabled = !this.enabled;
   }
 
   mixinFragmentDiffuse(diffuseMixes) {
