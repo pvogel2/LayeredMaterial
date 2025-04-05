@@ -159,6 +159,7 @@ function Renderer(props) {
           slopeTransition: [0, 0],
           map: textureLoader.load(GRASS01_JPG),
           bumpMap: textureLoader.load(GRASS1BUMP_PNG),
+          specularMap: textureLoader.load(GRASS02_JPG),
           bumpScale: 1,
         }),
         new MaterialLayer({
@@ -168,6 +169,7 @@ function Renderer(props) {
           slope:[0, 1],
           map: textureLoader.load(ROCK01_JPG),
           bumpMap: textureLoader.load(ROCK2BUMP_PNG),
+          specularMap: textureLoader.load(ROCK02_JPG),
           bumpScale: 1,
         }),
         new MaterialLayer({
@@ -178,7 +180,7 @@ function Renderer(props) {
           map: textureLoader.load(TEST_JPG),
           bumpMap: textureLoader.load(TEST_JPG),
           bumpScale: 1,
-          // enabled: false,
+          enabled: false,
         }),
       ];
 
