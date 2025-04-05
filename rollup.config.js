@@ -31,7 +31,7 @@ const plugins = [
 ];
 
 export default [
-  /*{
+  {
     external: ['three'],
     input: 'src/MeshLayeredMaterial.js',
     plugins,
@@ -76,7 +76,7 @@ export default [
       format: 'es',
       name: 'MaterialLayer',
     }
-  },*/
+  },
   {
     input: 'src/dev/index.js',
     // external: ['three'],

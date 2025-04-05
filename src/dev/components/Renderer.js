@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as THREE from 'three';
 import MaterialLayer from '../../MaterialLayer';
-import MeshLayeredMaterial2 from '../../MeshLayeredMaterial2';
+import MeshLayeredMaterial from '../../MeshLayeredMaterial';
 
 
 function Renderer(props) {
@@ -184,7 +184,7 @@ function Renderer(props) {
 
       // return new THREE.MeshStandardMaterial({ side: THREE.DoubleSide });
       // return new MeshLayeredMaterial({ layers, side: THREE.DoubleSide, wireframe: false, bumpScale: 1 });
-      return new MeshLayeredMaterial2({ layers, side: THREE.DoubleSide, wireframe: false });
+      return new MeshLayeredMaterial({ layers, side: THREE.DoubleSide, wireframe: false });
     }
     
     async function createTestMeshes(scene) {
@@ -231,9 +231,18 @@ function Renderer(props) {
       const ambientLight = new THREE.AmbientLight( 0x595959, 5 );
       dispatch({ type: 'SET_MESHES', payload: [landscapeMesh, sphereMesh, boxMesh, planeMesh] });
 
+      const spotLight = new THREE.SpotLight( 0xffffff );
+      spotLight.position.set(-10, 10, 10);
+      spotLight.castShadow = true;
+      spotLight.visible = true;
+      const spotLightHelper = new THREE.SpotLightHelper( spotLight );
+
       scene.add( ambientLight );
       scene.add( sunLight );
       scene.add( sunHelper );
+
+      scene.add(spotLight);
+      scene.add(spotLightHelper);
 
       dispatch({ type: 'SET_MATERIAL', payload: material });
     }
@@ -245,7 +254,7 @@ function Renderer(props) {
         
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize( window.innerWidth, window.innerHeight );
-        
+        renderer.shadowMap.enabled = true;
         const controls = new OrbitControls( camera, renderer.domElement );
         
         document.body.appendChild( renderer.domElement );
