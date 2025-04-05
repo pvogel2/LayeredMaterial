@@ -29,9 +29,11 @@ export default class MaterialLayer {
 
     this.map = config.map || null;
     this.bumpMap = config.bumpMap || null;
+    this.specularMap = config.specularMap || null;
 
     this.useDiffuse = !!this.map;
     this.useBump = !!this.bumpMap && !!this.bumpScale;
+    this.useSpecular = !!this.specularMap;
 
     this.enabled = config.enabled === false ? false : true;
   }
@@ -85,19 +87,23 @@ export default class MaterialLayer {
   }
 
   get mapName() {
-    return this.getTextureName('mp', 0);
+    return this.getTextureName('mp');
   }
 
   get bumpName() {
-    return this.getTextureName('bmp', 0);
+    return this.getTextureName('bmp');
+  }
+
+  get specularName() {
+    return this.getTextureName('smp');
   }
 
   get hsModul() {
     return `1. ${(this.range ? `* ${this.heightName}` : '')} ${this.slope ? `* ${this.slopeName}` : ''}`;
   }
 
-  getTextureName(base, idx) {
-    return `lyr_${base}${idx}${this.id}`;
+  getTextureName(base) {
+    return `lyr_${base}_${this.id}`;
   }
 
   toggle() {
@@ -152,6 +158,10 @@ export default class MaterialLayer {
         // uniforms += `uniform vec2 ${l.rangeDisturbOctavesName};\n`;
         uniforms += `uniform vec2 ${this.rangeTrnsName};\n`;
       }
+    }
+
+    if (this.useSpecular) {
+      uniforms += `uniform sampler2D ${this.specularName};\n`;
     }
 
     if (this.slope) {
