@@ -2,6 +2,16 @@
   "name": "layered-material",
   "version": "0.0.1",
   "description": "A threejs material to manage texture layers.",
+  "files": [
+    "dist/js/MaterialLayer.js",
+    "dist/js/MeshLayeredMaterial.js",
+    "dist/jsm/MaterialLayer.js",
+    "dist/jsm/MeshLayeredMaterial.js",
+    "package.json",
+    "package-lock.json",
+    "LICENCE",
+    "README.md"
+  ],
   "main": "dist/MeshLayeredMaterial.js",
   "scripts": {
     "build": "rollup -c",
@@ -44,5 +54,8 @@
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.6",
     "@mui/material": "^6.4.6"
+  },
+  "peerDependencies": {
+    "three": "^0.174.0"
   }
 }
