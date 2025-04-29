@@ -1,6 +1,6 @@
 {
   "name": "layered-material",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "A threejs material to manage texture layers.",
   "files": [
     "dist/js/MaterialLayer.js",
