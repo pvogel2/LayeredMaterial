@@ -1,7 +1,9 @@
 # LayeredMaterial
-A threejs material to manage texture layers.
+A threejs material to manage texture layers. MaterialLayers are defined as described below and set to the LayeredMaterial property layers. The Material takes care of the combination of the layers due to their configurations.
 
-** This is still work in progress **
+The material is intended to be used on landscape surfaces. It supports triplanar mapping and texture randomization to prevent the classical tiling effect.
+
+** This is a first version, not yet stable **
 
 ## Clone
 
@@ -9,7 +11,7 @@ To clone the project:
 ```bash
 git clone https://github.com/pvogel2/LayeredMaterial.git
 ```
-## Installation (not yet released)
+## Installation
 
 Install the node module :
 ```bash
@@ -66,9 +68,9 @@ const new MaterialLayer();
 
 **slopeTrns** Array \<Number\> lower and upper transition range
 
-**map** Array \<Images\> diffuse texture images
+**map** Image diffuse texture image
 
-**bumpMap** Array \<Images\> bump texture images
+**bumpMap** Image bump texture image
 
 **bumpScale** Number bump scale
 
