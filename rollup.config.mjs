@@ -19,9 +19,10 @@ const plugins = [
      extensions: ['.js', '.jsx']
   }),
   babel({
-     babelHelpers: 'bundled',
-     presets: ['@babel/preset-react'],
-     extensions: ['.js', '.jsx']
+    babelHelpers: 'bundled',
+    presets: ['@babel/preset-react'],
+    extensions: ['.js', '.jsx'],
+    exclude: [/node_modules/],
   }),
   commonjs(),
   replace({
@@ -30,7 +31,7 @@ const plugins = [
   })
 ];
 
-export default [
+const config = [
   {
     external: ['three'],
     input: 'src/MeshLayeredMaterial.js',
@@ -77,7 +78,10 @@ export default [
       name: 'MaterialLayer',
     }
   },
-  {
+];
+
+if (process.env.npm_lifecycle_event === 'dev')  {
+  config.push({
     input: 'src/dev/index.js',
     // external: ['three'],
     plugins: [...plugins, // so Rollup can convert `ms` to an ES module
@@ -99,5 +103,7 @@ export default [
       if ( message.code === 'MODULE_LEVEL_DIRECTIVE') return;
       console.warn( message );
     }
-  },
-];
+  });
+}
+
+export default config;
