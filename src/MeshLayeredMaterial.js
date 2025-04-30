@@ -24,6 +24,8 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
       USE_MIXUV: '',
       USE_TRIPLANAR: '',
       USE_BUMPMAP: '',
+      //USE_SPECULARMAP: '',
+      //USE_SPECULARMAP_UV: '',
     };
 
     this.lights = true; // enable light usage in shaders
@@ -38,7 +40,7 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
       THREE.UniformsLib["bumpmap" ],
       {
         lyrDirection: { value: this.direction },
-        specular: { value: new THREE.Color( 0xffffff )},
+        //specular: { value: new THREE.Color( 0xffffff )},
         shininess: { value: 30.0 },
         specularStrength: { value: 0.2 }, // TODO: per layer, support for textures
       }
@@ -175,6 +177,13 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
     });
 
     this.fragmentShader = `
+    uniform vec3 diffuse; // used by diffuseColor
+    uniform vec3 emissive;
+    uniform vec3 specular; // used by phong lighting
+    uniform float specularStrength; // used by phong lighting
+    uniform float shininess; // used by phong lighting
+    uniform float opacity; // used by diffuseColor
+
     #include <common>
     #include <packing> // defines methods used in shadowmap_pars_fragment
     #include <uv_pars_fragment> // refers to vUv
@@ -182,17 +191,10 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
     #include <bumpmap_pars_fragment>
     // #include <lightmap_pars_fragment> // experimental
     #include <shadowmap_pars_fragment> // if shadow maps enabled in renderer
-
+    #include <specularmap_pars_fragment>
     #include <bsdfs> // define lighting function used by phong
-    #include <lights_phong_pars_fragment> // define light calcuation functions for lights pars, based on phong
     #include <lights_pars_begin>
-
-    uniform vec3 diffuse; // used by diffuseColor
-    uniform vec3 emissive;
-    uniform vec3 specular; // used by phong lighting
-    uniform float specularStrength; // used by phong lighting
-    uniform float shininess; // used by phong lighting
-    uniform float opacity; // used by diffuseColor
+    #include <lights_phong_pars_fragment> // define light calcuation functions for lights pars, based on phong
 
     ${noise_pars_fragment}
 
@@ -247,6 +249,8 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
         normal = normalize(${layerNormals});
       #endif
 
+      #include <specularmap_fragment>
+
       // accumulation
       #include <lights_phong_fragment>
       #include <lights_fragment_begin>
@@ -255,7 +259,7 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
 
       vec4 lyr_baseColor = ${layerBaseColor};
 
-      vec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + totalEmissiveRadiance + reflectedLight.directSpecular + reflectedLight.indirectSpecular;
+      vec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;
 
       gl_FragColor = vec4( outgoingLight, diffuseColor.a ) * ${layerDiffuseMixes};
     }
