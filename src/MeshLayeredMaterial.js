@@ -137,7 +137,7 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
       #endif
 
       height = dot(lyrDirection, position);
-      slope = 1. - 0.99 * dot(lyrDirection, normalize(normal));
+      slope = dot(lyrDirection, normalize(normal));
 
       vViewPosition = - mvPosition.xyz;
     }

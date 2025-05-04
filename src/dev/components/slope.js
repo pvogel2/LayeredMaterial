@@ -5,11 +5,11 @@ import { Slider, Typography } from '@mui/material';
 function Slope(props) {
   const {
     onChange = () => {},
-    limit = [0, 1],
+    limit = [-1, 1],
     trns = [0, 0],
     dstrbStrength = [0, 0],
     dstrbOctaves = [0, 0],
-    min = 0,
+    min = -1,
     max = 1,
   } = props;
 
@@ -49,7 +49,6 @@ function Slope(props) {
   }
 
   function handleDstrbOctavesChange(_, values) {
-    console.log('handleDstrbOctavesChange', values);
     setDstrbOctaves([Math.abs(values[0]), Math.abs(values[1])]);
     onChange({
       limit: vLimit,

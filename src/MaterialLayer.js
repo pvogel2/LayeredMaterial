@@ -17,7 +17,7 @@ export default class MaterialLayer {
     this.rangeDstrbOctaves = config.rangeDstrbOctaves || [0, 0];
     this.rangeTrns = config.rangeTrns || [0, 0];
 
-    this.slope = config.slope || [0, 1];
+    this.slope = config.slope || null;
     this.slopeDstrbStrength = config.slopeDstrbStrength || [0, 0];
     this.slopeDstrbOctaves = config.slopeDstrbOctaves || [0, 0];
     this.slopeTrns = config.slopeTrns || [0, 0];
@@ -165,8 +165,8 @@ export default class MaterialLayer {
       return '';
     }
 
-    const lowerSlope = `abs(slope${this.useSlopeDisturb ? ` + ${this.slopeDstrbStrengthName}.x * noise(${this.slopeDstrbOctavesName}.x * vUv)` : ``})`;
-    const upperSlope = `abs(slope${this.useSlopeDisturb ? ` + ${this.slopeDstrbStrengthName}.y * noise(${this.slopeDstrbOctavesName}.y * vUv)` : ``})`;
+    const lowerSlope = `slope${this.useSlopeDisturb ? ` + ${this.slopeDstrbStrengthName}.x * noise(${this.slopeDstrbOctavesName}.x * vUv)` : ``}`;
+    const upperSlope = `slope${this.useSlopeDisturb ? ` + ${this.slopeDstrbStrengthName}.y * noise(${this.slopeDstrbOctavesName}.y * vUv)` : ``}`;
     return `float ${this.slopeName} = smoothstep(${this.slopeName}.x - ${this.slopeTrnsName}.x, ${this.slopeName}.x, ${lowerSlope}) * (1. - smoothstep(${this.slopeName}.y, ${this.slopeName}.y + ${this.slopeTrnsName}.y, ${upperSlope}));\n`;
 }
 
