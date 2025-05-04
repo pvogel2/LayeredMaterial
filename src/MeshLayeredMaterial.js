@@ -40,9 +40,7 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
       THREE.UniformsLib["bumpmap" ],
       {
         lyrDirection: { value: this.direction },
-        //specular: { value: new THREE.Color( 0xffffff )},
         shininess: { value: 30.0 },
-        specularStrength: { value: 0.2 }, // TODO: per layer, support for textures
       }
     ]);
 
@@ -151,10 +149,15 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
     let layerDiffuseColors = '';
     let layerHeights = '';
     let layerSlopes = '';
+    let layerMixes = '';
     let layerNormals = 'vec3(0.)';
 
     let layerDiffuseMixes = 'lyr_baseColor';
+    let layerSpecularStrengthMixes = 'lyr_baseSpecularStrength';
+    let layerSpecularColorMixes = 'lyr_baseSpecularColor';
     const layerBaseColor = 'vec4(0., 0., 0., 1.)';
+    const layerBaseSpecularColor = 'vec3(0., 0., 0.)';
+    const layerBaseSpecularStrength = '0.';
     const heightName = 'height';
   
     this.layers.forEach((l) => {
@@ -164,13 +167,20 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
 
       layerUniforms += l.addFragmentUniforms();
 
-      if (l.useDiffuse) {
+      if (l.useMixes) {
+        layerMixes += l.prepareMixes();
         layerHeights += l.addFragmentHeight(heightName);
         layerSlopes += l.addFragmentSlope();
+      }
 
-        layerDiffuseMixes = l.mixinFragmentDiffuse(layerDiffuseMixes);
+      if (l.useDiffuse) {
+        layerDiffuseMixes = l.mixDiffuse(layerDiffuseMixes);
     
         layerDiffuseColors += l.addDiffuseColor();
+      }
+      if (l.useSpecular) {
+        layerSpecularStrengthMixes = l.mixSpecularStrength(layerSpecularStrengthMixes);
+        layerSpecularColorMixes = l.mixSpecularColor(layerSpecularColorMixes);
       }
 
       layerNormals += `+ ${l.addBumpNormal()}`;
@@ -179,7 +189,7 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
     this.fragmentShader = `
     uniform vec3 diffuse; // used by diffuseColor
     uniform vec3 emissive;
-    uniform vec3 specular; // used by phong lighting
+    uniform vec3 specular; // color used by phong lighting
     uniform float specularStrength; // used by phong lighting
     uniform float shininess; // used by phong lighting
     uniform float opacity; // used by diffuseColor
@@ -230,8 +240,12 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
 
       ${triplanar_fragment_begin}
 
-      vec4 diffuseColor = vec4( diffuse, opacity ); // used by phong lighting
+      vec4 lyr_baseColor = ${layerBaseColor};
+      float lyr_baseSpecularStrength = ${layerBaseSpecularStrength};
+      vec3 lyr_baseSpecularColor = ${layerBaseSpecularColor};
 
+
+      vec4 diffuseColor = vec4( diffuse, opacity ); // used by phong lighting
       #include <normal_fragment_begin> // normal vector defind here from vNormal
 
       // initialize light processing
@@ -244,6 +258,8 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
 
       ${layerSlopes}
 
+      ${layerMixes}
+
       #ifdef USE_BUMPMAP
         // TODO: find correct sollution for slope and height ranges
         normal = normalize(${layerNormals});
@@ -253,11 +269,14 @@ class MeshLayeredMaterial extends THREE.ShaderMaterial {
 
       // accumulation
       #include <lights_phong_fragment>
+
+      // calculate after lights_phong_fragment (material is defined there)
+      material.specularColor = ${layerSpecularColorMixes};
+      material.specularStrength = ${layerSpecularStrengthMixes};
+
       #include <lights_fragment_begin>
       // #include <lights_fragment_maps>
       #include <lights_fragment_end>
-
-      vec4 lyr_baseColor = ${layerBaseColor};
 
       vec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;
 

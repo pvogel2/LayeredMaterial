@@ -43,7 +43,7 @@ To create a new layered material:
 const new MehsLayeredMaterial({ layers: [], direction: new THREE.Vector3(0, 1, 0)});
 ```
 
-The material is based on phong material properties, currently without specularity support. This will be added soon.
+The material is based on phong material properties.
 
 #### Properties:
 **layers** Array \<MaterialLayer\> Array of MaterialLayer objects
@@ -73,6 +73,10 @@ const new MaterialLayer();
 **bumpMap** Image bump texture image
 
 **bumpScale** Number bump scale
+
+**specularStrength** Number the strength of the specularity of the layer
+
+**specularColor** THREE.Color the color of the specularity of the layer
 
 ## Development
 

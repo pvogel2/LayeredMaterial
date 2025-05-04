@@ -29,13 +29,17 @@ export default class MaterialLayer {
 
     this.map = config.map || null;
     this.bumpMap = config.bumpMap || null;
+    this.specularColor = config.specularColor || null;
+    this.specularStrength = config.specularStrength || null;
     this.specularMap = config.specularMap || null;
 
     this.useDiffuse = !!this.map;
     this.useBump = !!this.bumpMap && !!this.bumpScale;
-    this.useSpecular = !!this.specularMap;
-
+    this.useSpecular = !!this.specularStrength && !!this.specularColor;
+    this.useSpecularMap = !!this.specularMap;
     this.enabled = config.enabled === false ? false : true;
+  
+    this.useMixes = this.useSpecular || this.useDiffuse || this.useBump;
   }
 
   get heightName() {
@@ -94,8 +98,20 @@ export default class MaterialLayer {
     return this.getTextureName('bmp');
   }
 
-  get specularName() {
+  get specularColorName() {
+    return `lyr_spc_clr_${this.id}`;
+  }
+
+  get specularStrengthName() {
+    return `lyr_spc_sth_${this.id}`;
+  }
+
+  get specularMapName() {
     return this.getTextureName('smp');
+  }
+
+  get hsModulName() {
+    return `lyr_hsm_${this.id}`;
   }
 
   get hsModul() {
@@ -110,8 +126,16 @@ export default class MaterialLayer {
     this.enabled = !this.enabled;
   }
 
-  mixinFragmentDiffuse(diffuseMixes) {
-    return `mix(${diffuseMixes}, ${this.diffuseColorName}, ${this.hsModul})`;
+  mixSpecularColor(specularColorMixes) {
+    return `mix(${specularColorMixes}, ${this.specularColorName}, ${this.hsModulName})`;
+  }
+
+  mixSpecularStrength(specularStrengthMixes) {
+    return `mix(${specularStrengthMixes}, ${this.specularStrengthName}, ${this.hsModulName})`;
+  }
+
+  mixDiffuse(diffuseMixes) {
+    return `mix(${diffuseMixes}, ${this.diffuseColorName}, ${this.hsModulName})`;
   }
 
   addDiffuseColor() {
@@ -122,7 +146,11 @@ export default class MaterialLayer {
     if (!this.useBump) {
       return '';
     }
-    return `perturbNormalArb( -vViewPosition, normal, dHdxy_fwd(${this.bumpName}, ${this.bumpScaleName} ), faceDirection ) * ${this.hsModul}`;
+    return `perturbNormalArb( -vViewPosition, normal, dHdxy_fwd(${this.bumpName}, ${this.bumpScaleName} ), faceDirection ) * ${this.hsModulName}`;
+  }
+
+  prepareMixes() {
+    return `float ${this.hsModulName} = ${this.hsModul};\n`;
   }
 
   addFragmentHeight(heightName) {
@@ -147,7 +175,7 @@ export default class MaterialLayer {
   }
 
   addFragmentUniforms() {
-    let uniforms = `// mixin layer ${this.id} uniforms\n`;
+    let uniforms = `// mix layer ${this.id} uniforms\n`;
     if (this.useDiffuse) {
       // write out diffuse color map texture
       uniforms += `uniform sampler2D ${this.mapName};\n`;
@@ -161,7 +189,12 @@ export default class MaterialLayer {
     }
 
     if (this.useSpecular) {
-      uniforms += `uniform sampler2D ${this.specularName};\n`;
+      uniforms += `uniform float ${this.specularStrengthName};\n`;
+      uniforms += `uniform vec3 ${this.specularColorName};\n`;
+    }
+
+    if (this.useSpecularMap) {
+      uniforms += `uniform sampler2D ${this.specularMapName};\n`;
     }
 
     if (this.slope) {
@@ -204,6 +237,11 @@ export default class MaterialLayer {
       // this.bumpMap.magFilter = THREE.NearestFilter;
       u[this.bumpName] = { type: "t", value: this.bumpMap };
       u[this.bumpScaleName] = { value: this.bumpScale };
+    }
+  
+    if(this.useSpecular) {
+      u[this.specularStrengthName] = { value: this.specularStrength };
+      u[this.specularColorName] = { type: 'vec3', value: this.specularColor };
     }
   }
 }

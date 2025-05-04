@@ -15,28 +15,6 @@ function updateObject(oldObject, newValues) {
 }
 
 export default function appReducer(state = initialState, action) {
-/* function material(material = null, action) {
-  switch (action.type) {
-    case 'SET_MATERIAL':
-      return action.payload;
-    default:
-      return material;
-  }
-}
-
-function updateLayer(layer = null, action) {
-  if (action.type === 'UPDATE_LAYER') {
-    material.updateLayer(action.payload);
-    return action.layer;
-  } else {
-    return layer;
-  }
-}
-
-export default combineReducers({
-  material,
-  updateLayer,
-}); */
   switch (action.type) {
     case 'SET_MATERIAL': {
       const m = action.payload;

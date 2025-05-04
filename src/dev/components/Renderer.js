@@ -153,7 +153,8 @@ function Renderer(props) {
           slopeTransition: [0, 0],
           map: textureLoader.load(GRASS01_JPG),
           bumpMap: textureLoader.load(GRASS1BUMP_PNG),
-          specularMap: textureLoader.load(RED_PNG),
+          specularStrength: 0.2,
+          specularColor: new THREE.Color('#88ff88'),
           bumpScale: 1,
         }),
         new MaterialLayer({
@@ -163,7 +164,8 @@ function Renderer(props) {
           slope:[0, 1],
           map: textureLoader.load(ROCK01_JPG),
           bumpMap: textureLoader.load(ROCK2BUMP_PNG),
-          specularMap: textureLoader.load(RED_PNG),
+          specularStrength: 0.7,
+          specularColor: new THREE.Color('#ffcccc'),
           bumpScale: 1,
         }),
         new MaterialLayer({
@@ -178,8 +180,6 @@ function Renderer(props) {
         }),
       ];
 
-      // return new THREE.MeshStandardMaterial({ side: THREE.DoubleSide });
-      // return new MeshLayeredMaterial({ layers, side: THREE.DoubleSide, wireframe: false, bumpScale: 1 });
       return new MeshLayeredMaterial({ layers, side: THREE.DoubleSide, wireframe: false });
     }
     
