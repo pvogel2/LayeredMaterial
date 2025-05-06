@@ -85,4 +85,9 @@ Start dev server on port 5000:
 npm run dev
 ```
 
+The browser interface of the dev server provides a live view on an editable simple predefined material setup.
+
+![alt text](./docs/images/devScreenshot02.png)
+
+![alt text](./docs/images/devScreenshot03.png)
 

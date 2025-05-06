@@ -18,17 +18,18 @@ function Range(props) {
   const minTrns = -1 * maxTrns;
 
   function handleTrnsChange(_, values) {
-    setTrns([Math.abs(values[0]), Math.abs(values[1])]);
+    const absValues = [Math.abs(values[0]), Math.abs(values[1])];
+    setTrns(absValues);
     onChange({
       limit: vLimit,
-      trns: vTrns,
+      trns: absValues,
     });
   }
 
   function handleLimitChange(_, values) {
     setLimit(values);
     onChange({
-      limit: vLimit,
+      limit: values,
       trns: vTrns,
     });
   }
