@@ -5,11 +5,11 @@ import { Slider, Typography } from '@mui/material';
 function Slope(props) {
   const {
     onChange = () => {},
-    limit = [0, 1],
+    limit = [-1, 1],
     trns = [0, 0],
     dstrbStrength = [0, 0],
     dstrbOctaves = [0, 0],
-    min = 0,
+    min = -1,
     max = 1,
   } = props;
 
@@ -19,10 +19,11 @@ function Slope(props) {
   const [vDstrbOctaves, setDstrbOctaves] = useState([...dstrbOctaves]);
 
   function handleTrnsChange(_, values) {
-    setTrns([Math.abs(values[0]), Math.abs(values[1])]);
+    const absValues = [Math.abs(values[0]), Math.abs(values[1])];
+    setTrns(absValues);
     onChange({
       limit: vLimit,
-      trns: vTrns,
+      trns: absValues,
       dstrbStrength: vDstrbStrength,
       dstrbOctaves: vDstrbOctaves,
     });
@@ -31,7 +32,7 @@ function Slope(props) {
   function handleLimitChange(_, values) {
     setLimit(values);
     onChange({
-      limit: vLimit,
+      limit: values,
       trns: vTrns,
       dstrbStrength: vDstrbStrength,
       dstrbOctaves: vDstrbOctaves,
@@ -39,23 +40,24 @@ function Slope(props) {
   }
 
   function handleDstrbStrengthChange(_, values) {
-    setDstrbStrength([Math.abs(values[0]), Math.abs(values[1])]);
+    const absValues = [Math.abs(values[0]), Math.abs(values[1])];
+    setDstrbStrength(absValues);
     onChange({
       limit: vLimit,
       trns: vTrns,
-      dstrbStrength: vDstrbStrength,
+      dstrbStrength: absValues,
       dstrbOctaves: vDstrbOctaves,
     });
   }
 
   function handleDstrbOctavesChange(_, values) {
-    console.log('handleDstrbOctavesChange', values);
-    setDstrbOctaves([Math.abs(values[0]), Math.abs(values[1])]);
+    const absValues = [Math.abs(values[0]), Math.abs(values[1])];
+    setDstrbOctaves(absValues);
     onChange({
       limit: vLimit,
       trns: vTrns,
       dstrbStrength: vDstrbStrength,
-      dstrbOctaves: vDstrbOctaves,
+      dstrbOctaves: absValues,
     });
   }
 

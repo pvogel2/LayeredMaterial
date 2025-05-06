@@ -43,7 +43,7 @@ To create a new layered material:
 const new MehsLayeredMaterial({ layers: [], direction: new THREE.Vector3(0, 1, 0)});
 ```
 
-The material is based on phong material properties, currently without specularity support. This will be added soon.
+The material is based on phong material properties.
 
 #### Properties:
 **layers** Array \<MaterialLayer\> Array of MaterialLayer objects
@@ -74,6 +74,10 @@ const new MaterialLayer();
 
 **bumpScale** Number bump scale
 
+**specularStrength** Number the strength of the specularity of the layer
+
+**specularColor** THREE.Color the color of the specularity of the layer
+
 ## Development
 
 Start dev server on port 5000:
@@ -81,4 +85,9 @@ Start dev server on port 5000:
 npm run dev
 ```
 
+The browser interface of the dev server provides a live view on an editable simple predefined material setup.
+
+![alt text](./docs/images/devScreenshot02.png)
+
+![alt text](./docs/images/devScreenshot03.png)
 

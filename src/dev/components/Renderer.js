@@ -15,6 +15,7 @@ function Renderer(props) {
   const GRASS1BUMP_PNG = '/images/grass01_bump256.png';
   const GRASS2BUMP_PNG = '/images/grass02_bump256.png';
   const ROCK2BUMP_PNG = '/images/rock02_bump256.png';
+  const RED_PNG = '/images/red.png';
   
   const ROCK01_JPG = '/images/rock01.jpg';
   const ROCK02_JPG = '/images/rock02.jpg';
@@ -131,14 +132,7 @@ function Renderer(props) {
     function createBoxGeometry() {
       const size = 5;
       const geometry  = new THREE.BoxGeometry( size, size, size, size, size, size );
-  
-      /* const uv = [];
-  
-      for (let i = 0; i < geometry.attributes.uv.count * 2; i++) {
-        uv.push(geometry.attributes.uv.array[i] * size);
-      }*/
-  
-      //geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( uv, 2 ) );
+
       geometry.computeVertexNormals();
       return {
         geometry,
@@ -155,35 +149,37 @@ function Renderer(props) {
           id: 'grass',
           range: [-10, 0],
           rangeTrns: [0, 0],
-          slope:[0, 1],
+          slope:[-1, 1],
           slopeTransition: [0, 0],
           map: textureLoader.load(GRASS01_JPG),
           bumpMap: textureLoader.load(GRASS1BUMP_PNG),
+          specularStrength: 0.2,
+          specularColor: new THREE.Color('#88ff88'),
           bumpScale: 1,
         }),
         new MaterialLayer({
           id: 'rock',
           range:[0, 10],
           rangeTrns: [0, 0],
-          slope:[0, 1],
+          slope:[-1, 1],
           map: textureLoader.load(ROCK01_JPG),
           bumpMap: textureLoader.load(ROCK2BUMP_PNG),
+          specularStrength: 0.7,
+          specularColor: new THREE.Color('#ffcccc'),
           bumpScale: 1,
         }),
         new MaterialLayer({
           id: 'test',
           range:[-10, 10],
           rangeTrns: [0, 0],
-          slope:[0, 1],
+          slope:[-1, 1],
           map: textureLoader.load(TEST_JPG),
           bumpMap: textureLoader.load(TEST_JPG),
           bumpScale: 1,
-          // enabled: false,
+          enabled: false,
         }),
       ];
 
-      // return new THREE.MeshStandardMaterial({ side: THREE.DoubleSide });
-      // return new MeshLayeredMaterial({ layers, side: THREE.DoubleSide, wireframe: false, bumpScale: 1 });
       return new MeshLayeredMaterial({ layers, side: THREE.DoubleSide, wireframe: false });
     }
     
@@ -226,9 +222,10 @@ function Renderer(props) {
       const sunLight = new THREE.DirectionalLight( 0xffffff, 1.3 );
       sunLight.castShadow = true;
       sunLight.position.set(-10, 10, 10);
-      const sunHelper = new THREE.DirectionalLightHelper( sunLight, 5 );
+      const sunHelper = new THREE.DirectionalLightHelper( sunLight, 3 );
 
-      const ambientLight = new THREE.AmbientLight( 0x595959, 5 );
+
+      const ambientLight = new THREE.AmbientLight( 0xFFFFFF, 2 );
       dispatch({ type: 'SET_MESHES', payload: [landscapeMesh, sphereMesh, boxMesh, planeMesh] });
 
       const spotLight = new THREE.SpotLight( 0xffffff );

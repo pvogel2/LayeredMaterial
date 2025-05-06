@@ -17,7 +17,7 @@ export default class MaterialLayer {
     this.rangeDstrbOctaves = config.rangeDstrbOctaves || [0, 0];
     this.rangeTrns = config.rangeTrns || [0, 0];
 
-    this.slope = config.slope || [0, 1];
+    this.slope = config.slope || null;
     this.slopeDstrbStrength = config.slopeDstrbStrength || [0, 0];
     this.slopeDstrbOctaves = config.slopeDstrbOctaves || [0, 0];
     this.slopeTrns = config.slopeTrns || [0, 0];
@@ -29,11 +29,17 @@ export default class MaterialLayer {
 
     this.map = config.map || null;
     this.bumpMap = config.bumpMap || null;
+    this.specularColor = config.specularColor || null;
+    this.specularStrength = config.specularStrength || null;
+    this.specularMap = config.specularMap || null;
 
     this.useDiffuse = !!this.map;
     this.useBump = !!this.bumpMap && !!this.bumpScale;
-
+    this.useSpecular = !!this.specularStrength && !!this.specularColor;
+    this.useSpecularMap = !!this.specularMap;
     this.enabled = config.enabled === false ? false : true;
+  
+    this.useMixes = this.useSpecular || this.useDiffuse || this.useBump;
   }
 
   get heightName() {
@@ -85,27 +91,51 @@ export default class MaterialLayer {
   }
 
   get mapName() {
-    return this.getTextureName('mp', 0);
+    return this.getTextureName('mp');
   }
 
   get bumpName() {
-    return this.getTextureName('bmp', 0);
+    return this.getTextureName('bmp');
+  }
+
+  get specularColorName() {
+    return `lyr_spc_clr_${this.id}`;
+  }
+
+  get specularStrengthName() {
+    return `lyr_spc_sth_${this.id}`;
+  }
+
+  get specularMapName() {
+    return this.getTextureName('smp');
+  }
+
+  get hsModulName() {
+    return `lyr_hsm_${this.id}`;
   }
 
   get hsModul() {
     return `1. ${(this.range ? `* ${this.heightName}` : '')} ${this.slope ? `* ${this.slopeName}` : ''}`;
   }
 
-  getTextureName(base, idx) {
-    return `lyr_${base}${idx}${this.id}`;
+  getTextureName(base) {
+    return `lyr_${base}_${this.id}`;
   }
 
   toggle() {
     this.enabled = !this.enabled;
   }
 
-  mixinFragmentDiffuse(diffuseMixes) {
-    return `mix(${diffuseMixes}, ${this.diffuseColorName}, ${this.hsModul})`;
+  mixSpecularColor(specularColorMixes) {
+    return `mix(${specularColorMixes}, ${this.specularColorName}, ${this.hsModulName})`;
+  }
+
+  mixSpecularStrength(specularStrengthMixes) {
+    return `mix(${specularStrengthMixes}, ${this.specularStrengthName}, ${this.hsModulName})`;
+  }
+
+  mixDiffuse(diffuseMixes) {
+    return `mix(${diffuseMixes}, ${this.diffuseColorName}, ${this.hsModulName})`;
   }
 
   addDiffuseColor() {
@@ -116,7 +146,11 @@ export default class MaterialLayer {
     if (!this.useBump) {
       return '';
     }
-    return `perturbNormalArb( -vViewPosition, normal, dHdxy_fwd(${this.bumpName}, ${this.bumpScaleName} ), faceDirection ) * ${this.hsModul}`;
+    return `perturbNormalArb( -vViewPosition, normal, dHdxy_fwd(${this.bumpName}, ${this.bumpScaleName} ), faceDirection ) * ${this.hsModulName}`;
+  }
+
+  prepareMixes() {
+    return `float ${this.hsModulName} = ${this.hsModul};\n`;
   }
 
   addFragmentHeight(heightName) {
@@ -131,8 +165,8 @@ export default class MaterialLayer {
       return '';
     }
 
-    const lowerSlope = `abs(slope${this.useSlopeDisturb ? ` + ${this.slopeDstrbStrengthName}.x * noise(${this.slopeDstrbOctavesName}.x * vUv)` : ``})`;
-    const upperSlope = `abs(slope${this.useSlopeDisturb ? ` + ${this.slopeDstrbStrengthName}.y * noise(${this.slopeDstrbOctavesName}.y * vUv)` : ``})`;
+    const lowerSlope = `slope${this.useSlopeDisturb ? ` + ${this.slopeDstrbStrengthName}.x * noise(${this.slopeDstrbOctavesName}.x * vUv)` : ``}`;
+    const upperSlope = `slope${this.useSlopeDisturb ? ` + ${this.slopeDstrbStrengthName}.y * noise(${this.slopeDstrbOctavesName}.y * vUv)` : ``}`;
     return `float ${this.slopeName} = smoothstep(${this.slopeName}.x - ${this.slopeTrnsName}.x, ${this.slopeName}.x, ${lowerSlope}) * (1. - smoothstep(${this.slopeName}.y, ${this.slopeName}.y + ${this.slopeTrnsName}.y, ${upperSlope}));\n`;
 }
 
@@ -141,7 +175,7 @@ export default class MaterialLayer {
   }
 
   addFragmentUniforms() {
-    let uniforms = `// mixin layer ${this.id} uniforms\n`;
+    let uniforms = `// mix layer ${this.id} uniforms\n`;
     if (this.useDiffuse) {
       // write out diffuse color map texture
       uniforms += `uniform sampler2D ${this.mapName};\n`;
@@ -152,6 +186,15 @@ export default class MaterialLayer {
         // uniforms += `uniform vec2 ${l.rangeDisturbOctavesName};\n`;
         uniforms += `uniform vec2 ${this.rangeTrnsName};\n`;
       }
+    }
+
+    if (this.useSpecular) {
+      uniforms += `uniform float ${this.specularStrengthName};\n`;
+      uniforms += `uniform vec3 ${this.specularColorName};\n`;
+    }
+
+    if (this.useSpecularMap) {
+      uniforms += `uniform sampler2D ${this.specularMapName};\n`;
     }
 
     if (this.slope) {
@@ -194,6 +237,11 @@ export default class MaterialLayer {
       // this.bumpMap.magFilter = THREE.NearestFilter;
       u[this.bumpName] = { type: "t", value: this.bumpMap };
       u[this.bumpScaleName] = { value: this.bumpScale };
+    }
+  
+    if(this.useSpecular) {
+      u[this.specularStrengthName] = { value: this.specularStrength };
+      u[this.specularColorName] = { type: 'vec3', value: this.specularColor };
     }
   }
 }
